@@ -1,5 +1,5 @@
 =======================
 publish-container-tools
 =======================
-A set of scripts for publishing container images.
+A set of tools for publishing container images.
 Is used as Material for GOCD pipelines.

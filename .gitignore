@@ -128,5 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# Ignore any tar files
+*.tar
+
 # Ignore any gpg generated files
 *.gpg

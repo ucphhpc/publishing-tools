@@ -69,8 +69,9 @@ def main():
             f"Signing file: {file_} with key: {key} using the command: {sign_command} with arguments: {formatted_sign_args} outputting to: {output}"
         )
 
-    sign_job_command = [sign_command, "-u", key, "--output", output, file_]
+    sign_job_command = [sign_command, "-u", key, "--output", output]
     sign_job_command.extend(formatted_sign_args)
+    sign_job_command.append(file_)
     success, result = run(sign_job_command, output_format="str")
     if not success:
         if verbose:

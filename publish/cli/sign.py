@@ -1,13 +1,11 @@
 import sys
 import os
 import argparse
-from utils.job import run
-
+from publish.gpg import sign_file
+from publish.utils.io import exists
+from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND, SIGN_FAILURE
 
 SCRIPT_NAME = __file__
-SUCCESS = 0
-FILE_NOT_FOUND = 1
-SIGN_FAILURE = 2
 
 
 def main():
@@ -54,32 +52,19 @@ def main():
     sign_args = args.sign_args
     verbose = args.verbose
 
-    if not os.path.exists(file_):
+    if not exists(file_):
         if verbose:
             print(f"File to sign not found: {file_}")
         return FILE_NOT_FOUND
 
-    filename = os.path.basename(file_)
-    if not output:
-        output = f"{filename}.{sign_command}"
-
-    formatted_sign_args = sign_args.split()
-    if verbose:
-        print(
-            f"Signing file: {file_} with key: {key} using the command: {sign_command} with arguments: {formatted_sign_args} outputting to: {output}"
-        )
-
-    sign_job_command = [sign_command, "-u", key, "--output", output]
-    sign_job_command.extend(formatted_sign_args)
-    sign_job_command.append(file_)
-    success, result = run(sign_job_command, output_format="str")
-    if not success:
-        if verbose:
-            print(
-                f"Failed to sign file: {file_}, output: {result['output']}, error: {result['error']}"
-            )
+    signed = sign_file(file_, key, output, sign_command, sign_args, verbose=verbose)
+    if not signed:
         return SIGN_FAILURE
     return SUCCESS
+
+
+def cli():
+    sys.exit(main())
 
 
 if __name__ == "__main__":

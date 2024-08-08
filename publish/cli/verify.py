@@ -1,13 +1,12 @@
 import sys
 import os
 import argparse
-from utils.job import run
+from publish.cli.defaults import SUCCESS, FILE_NOT_FOUND, VERIFY_FAILURE
+from publish.utils.io import exists
+from publish.gpg import verify_file
 
 
 SCRIPT_NAME = __file__
-SUCCESS = 0
-FILE_NOT_FOUND = 1
-VERIFY_FAILURE = 2
 
 
 def main():
@@ -50,30 +49,19 @@ def main():
     verify_args = args.verify_args
     verbose = args.verbose
 
-    if not os.path.exists(file_):
-        print(f"File to verify not found: {file_}", file=sys.stderr)
+    if not exists(file_):
+        if verbose:
+            print(f"File to verify not found: {file_}")
         return FILE_NOT_FOUND
 
-    # Expects a space seperated list of verify_command arguments
-    formatted_verify_args = verify_args.split()
-    execute_command = [verify_command, "-u", key]
-    execute_command.extend(formatted_verify_args)
-    execute_command.append(file_)
-
-    if verbose:
-        print(f"Executing command: {execute_command}")
-
-    success, result = run(execute_command, output_format="str")
-    if not success:
-        if verbose:
-            print(
-                f"Failed to verify file: {file_}, output: {result['output']}, error: {result['error']}"
-            )
+    verified = verify_file(file_, key, verify_command, verify_args, verbose=verbose)
+    if not verified:
         return VERIFY_FAILURE
-    if verbose:
-        print(f"Successfully verified file: {file_} with key: {key}")
-    print(f"{result}")
     return SUCCESS
+
+
+def cli():
+    sys.exit(main())
 
 
 if __name__ == "__main__":

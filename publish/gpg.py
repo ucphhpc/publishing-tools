@@ -111,7 +111,7 @@ def delete_key(key_fingerprint, delete_command="gpg", delete_args=None, verbose=
 
 
 def sign_file(
-    file_, key, sign_command="gpg", sign_args=None, output=None, verbose=False
+    file_, key_name, sign_command="gpg", sign_args=None, output=None, verbose=False
 ):
     filename = os.path.basename(file_)
     if not output:
@@ -122,10 +122,10 @@ def sign_file(
 
     if verbose:
         print(
-            f"Signing file: {file_} with key: {key} using the command: {sign_command} with arguments: {sign_args} outputting to: {output}"
+            f"Signing file: {file_} with key: {key_name} using the command: {sign_command} with arguments: {sign_args} outputting to: {output}"
         )
 
-    sign_job_command = [sign_command, "-u", key, "--output", output]
+    sign_job_command = [sign_command, "-u", key_name, "--output", output]
     sign_job_command.extend(sign_args)
     sign_job_command.append(file_)
     success, result = run(sign_job_command, output_format="str")
@@ -138,7 +138,17 @@ def sign_file(
     return True
 
 
-def verify_file(file_, key, verify_command="gpg", verify_args=None, verbose=False):
+def verify_file(file_, key_name, verify_command="gpg", verify_args=None, verbose=False):
+    """
+    Verify a file with a key using gpg by default.
+    If the file is successfully verified, return True, otherwise return False.
+
+    Note:
+    gpg will try to use every available public key in the selected keyring
+    after the specified `key_name`. Therefore if the file is signed with any key
+    that is in the selected public keyring, the file will be verified successfully.
+    """
+
     execute_command = [verify_command]
     if not verify_args:
         verify_args = [
@@ -152,7 +162,7 @@ def verify_file(file_, key, verify_command="gpg", verify_args=None, verbose=Fals
     execute_command.extend(verify_args)
     if not verbose:
         execute_command.append("--quiet")
-    execute_command.extend(["-u", key])
+    execute_command.extend(["-u", key_name])
     execute_command.append(file_)
 
     if verbose:
@@ -168,8 +178,8 @@ def verify_file(file_, key, verify_command="gpg", verify_args=None, verbose=Fals
     for line in result["output"].split("\n"):
         if line.startswith(GPG_VERIFY_SUCCESS_PREFIX):
             if verbose:
-                print(f"Successfully verified file: {file_} with key: {key}")
+                print(f"Successfully verified file: {file_} with key: {key_name}")
             return True
     if verbose:
-        print(f"Successfully verified file: {file_} with key: {key}")
+        print(f"Successfully verified file: {file_} with key: {key_name}")
     return True

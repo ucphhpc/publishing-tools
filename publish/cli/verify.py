@@ -1,7 +1,7 @@
 import sys
 import os
 import argparse
-from publish.cli.defaults import SUCCESS, FILE_NOT_FOUND, VERIFY_FAILURE
+from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND, VERIFY_FAILURE
 from publish.utils.io import exists
 from publish.gpg import verify_file
 
@@ -9,7 +9,7 @@ from publish.gpg import verify_file
 SCRIPT_NAME = __file__
 
 
-def main():
+def parse_args(args):
     parser = argparse.ArgumentParser(
         prog=SCRIPT_NAME,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -41,17 +41,19 @@ def main():
         default=False,
         help="Flag to enable verbose output.",
     )
-    args = parser.parse_args()
+    return parser.parse_args(args=args)
 
-    file_ = os.path.realpath(os.path.expanduser(args.file))
-    key = args.key
-    verify_command = args.verify_command
-    verify_args = args.verify_args
-    verbose = args.verbose
+
+def main(args):
+    parsed_args = parse_args(args)
+    file_ = os.path.realpath(os.path.expanduser(parsed_args.file))
+    key = parsed_args.key
+    verify_command = parsed_args.verify_command
+    verify_args = parsed_args.verify_args
+    verbose = parsed_args.verbose
 
     if not exists(file_):
-        if verbose:
-            print(f"File to verify not found: {file_}")
+        print(f"File to verify not found: {file_}", file=sys.stderr)
         return FILE_NOT_FOUND
 
     verified = verify_file(file_, key, verify_command, verify_args, verbose=verbose)
@@ -61,8 +63,8 @@ def main():
 
 
 def cli():
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

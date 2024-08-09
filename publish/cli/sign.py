@@ -8,16 +8,16 @@ from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND, SIGN_FAILURE
 SCRIPT_NAME = __file__
 
 
-def main():
+def parse_args(args):
     parser = argparse.ArgumentParser(
         prog=SCRIPT_NAME,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "file",
-        help="Path to the file to sign",
+        help="Path to the file to sign.",
     )
-    parser.add_argument("key", help="Path to the key to sign the file with")
+    parser.add_argument("key", help="Path to the key to sign the file with.")
     parser.add_argument(
         "--output",
         "-o",
@@ -43,18 +43,20 @@ def main():
         default=False,
         help="Flag to enable verbose output.",
     )
-    args = parser.parse_args()
+    return parser.parse_args(args=args)
 
-    file_ = os.path.realpath(os.path.expanduser(args.file))
-    key = args.key
-    output = args.output
-    sign_command = args.sign_command
-    sign_args = args.sign_args
-    verbose = args.verbose
+
+def main(args):
+    parsed_args = parse_args(args)
+    file_ = os.path.realpath(os.path.expanduser(parsed_args.file))
+    key = parsed_args.key
+    output = parsed_args.output
+    sign_command = parsed_args.sign_command
+    sign_args = parsed_args.sign_args
+    verbose = parsed_args.verbose
 
     if not exists(file_):
-        if verbose:
-            print(f"File to sign not found: {file_}")
+        print(f"File to sign not found: {file_}", file=sys.stderr)
         return FILE_NOT_FOUND
 
     signed = sign_file(file_, key, output, sign_command, sign_args, verbose=verbose)
@@ -64,8 +66,8 @@ def main():
 
 
 def cli():
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

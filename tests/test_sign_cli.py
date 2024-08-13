@@ -1,29 +1,43 @@
 import os
 import unittest
 
-import tests.base
+from publish.gpg import gen_key, delete_key, get_key_fingerprint
 from publish.utils.io import exists, makedirs, remove, write
 from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND, SIGN_FAILURE
 from publish.cli.sign import main
-from tests.common import (
-    KEY_GENERATOR,
-    GPG_GEN_KEY_ARGS,
-    GPG_GET_FINGERPRINT_ARGS,
-    GPG_SIGN_ARGS,
-    GPG_DELETE_ARGS,
-)
+import tests.base
+from tests.common import TMP_TEST_PATH, KEY_GENERATOR
 
-CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
-TMP_TEST_DIR = os.path.join(CURRENT_DIR, "tmp", "test_sign_cli")
-TEST_KEY_NAME = "test_sign_key"
+TEST_NAME = os.path.basename(__file__).split(".")[0]
+CURRENT_TEST_DIR = os.path.join(TMP_TEST_PATH, TEST_NAME)
+TEST_KEY_NAME = f"{TEST_NAME}_key"
+
+TMP_TEST_GNUPG_DIR = os.path.join(CURRENT_TEST_DIR, ".gnupg")
+GPG_TEST_SIGN_KEYRING = f"{TEST_NAME}.gpg"
+GPG_SIGN_COMMON_ARGS = [
+    "--homedir",
+    TMP_TEST_GNUPG_DIR,
+    "--no-default-keyring",
+    "--keyring",
+    GPG_TEST_SIGN_KEYRING,
+    "--no-tty",
+    "--batch",
+]
+GPG_GEN_KEY_ARGS = GPG_SIGN_COMMON_ARGS + ["--quick-gen-key", "--passphrase", ""]
+GPG_GET_FINGERPRINT_ARGS = GPG_SIGN_COMMON_ARGS + ["--with-colons", "--fingerprint"]
+GPG_SIGN_ARGS = GPG_SIGN_COMMON_ARGS + ["--sign", "--passphrase", ""]
+GPG_DELETE_ARGS = GPG_SIGN_COMMON_ARGS + [
+    "--delete-secret-and-public-key",
+    "--yes",
+]
 
 
 class TestSignCLI(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        if not exists(TMP_TEST_DIR):
-            assert makedirs(TMP_TEST_DIR) is True
+        if not exists(CURRENT_TEST_DIR):
+            assert makedirs(CURRENT_TEST_DIR) is True
         # Gen sign test key
         assert (
             gen_key(
@@ -50,8 +64,8 @@ class TestSignCLI(unittest.TestCase):
             is True
         )
         # Remove the temporary directory and its contents
-        assert remove(TMP_TEST_DIR, recursive=True) is True
-        assert not exists(TMP_TEST_DIR)
+        assert remove(CURRENT_TEST_DIR, recursive=True) is True
+        assert not exists(CURRENT_TEST_DIR)
 
     def test_help_msg(self):
         return_code = None
@@ -68,7 +82,7 @@ class TestSignCLI(unittest.TestCase):
         self.assertEqual(return_code, FILE_NOT_FOUND)
 
     def test_sign_failure(self):
-        test_file_path = os.path.join(TMP_TEST_DIR, "test_sign_failure_file")
+        test_file_path = os.path.join(CURRENT_TEST_DIR, "test_sign_failure_file")
         test_sign_file_content = "foo bar"
         self.assertTrue(write(test_file_path, test_sign_file_content))
         self.assertTrue(exists(test_file_path))
@@ -79,7 +93,7 @@ class TestSignCLI(unittest.TestCase):
         self.assertFalse(exists(test_file_path))
 
     def test_sign_success(self):
-        test_sign_file = "test_sign_success_file"
+        test_sign_file = os.path.join(CURRENT_TEST_DIR, "test_sign_success_file")
         test_sign_file_content = "adm0ad9am d0a9m2doim"
         self.assertTrue(write(test_sign_file, test_sign_file_content))
         self.assertTrue(exists(test_sign_file))

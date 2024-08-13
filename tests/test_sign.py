@@ -4,31 +4,42 @@ import unittest
 from publish.gpg import sign_file, gen_key, delete_key, get_key_fingerprint
 from publish.utils.io import makedirs, exists, remove, write
 import tests.base
-from tests.common import (
-    KEY_GENERATOR,
-    GPG_GEN_KEY_ARGS,
-    GPG_GET_FINGERPRINT_ARGS,
-    GPG_SIGN_ARGS,
-    GPG_DELETE_ARGS,
-)
+from tests.common import TMP_TEST_PATH, KEY_GENERATOR
 
+TEST_NAME = os.path.basename(__file__).split(".")[0]
+CURRENT_TEST_DIR = os.path.join(TMP_TEST_PATH, TEST_NAME)
+TEST_KEY_NAME = f"{TEST_NAME}_key"
 
-CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
-TMP_TEST_DIR = os.path.join(CURRENT_DIR, "tmp", "test_sign")
+# GPG settings
+TMP_TEST_GNUPG_DIR = os.path.join(CURRENT_TEST_DIR, ".gnupg")
+GPG_TEST_SIGN_KEYRING = f"{TEST_KEY_NAME}.gpg"
+GPG_SIGN_COMMON_ARGS = [
+    "--homedir",
+    CURRENT_TEST_DIR,
+    "--no-default-keyring",
+    "--keyring",
+    GPG_TEST_SIGN_KEYRING,
+    "--no-tty",
+    "--batch",
+]
+GPG_GEN_KEY_ARGS = GPG_SIGN_COMMON_ARGS + ["--quick-gen-key", "--passphrase", ""]
+GPG_GET_FINGERPRINT_ARGS = GPG_SIGN_COMMON_ARGS + ["--with-colons", "--fingerprint"]
+GPG_SIGN_ARGS = GPG_SIGN_COMMON_ARGS + ["--sign", "--passphrase", ""]
+GPG_DELETE_ARGS = GPG_SIGN_COMMON_ARGS + [
+    "--delete-secret-and-public-key",
+    "--yes",
+]
 
 TEST_SIGN_FILE = "test_sign_file"
 TEST_FILE_CONTENT = "sfopawmdioamwioac aoimaw aw 2414 14"
-
-# GPG settings
-TEST_KEY_NAME = "test_key"
 
 
 class TestGpGSignFile(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Create a temporary directory to store the temporary test files to sign
-        if not exists(TMP_TEST_DIR):
-            assert makedirs(TMP_TEST_DIR) is True
+        if not exists(CURRENT_TEST_DIR):
+            assert makedirs(CURRENT_TEST_DIR) is True
         # Gen sign test key
         assert (
             gen_key(
@@ -55,8 +66,8 @@ class TestGpGSignFile(unittest.TestCase):
             is True
         )
         # Remove the temporary directory and its contents
-        assert remove(TMP_TEST_DIR, recursive=True) is True
-        assert not exists(TMP_TEST_DIR)
+        assert remove(CURRENT_TEST_DIR, recursive=True) is True
+        assert not exists(CURRENT_TEST_DIR)
 
     def test_generate_and_delete_sign_key(self):
         another_test_key = "another_test_key"
@@ -81,7 +92,7 @@ class TestGpGSignFile(unittest.TestCase):
 
     def test_sign_success(self):
         # Create a temporary file to sign
-        test_file_path = os.path.join(TMP_TEST_DIR, TEST_SIGN_FILE)
+        test_file_path = os.path.join(CURRENT_TEST_DIR, TEST_SIGN_FILE)
         self.assertTrue(write(test_file_path, TEST_FILE_CONTENT))
         self.assertTrue(exists(test_file_path))
 
@@ -102,7 +113,7 @@ class TestGpGSignFile(unittest.TestCase):
 
     def test_sign_nonexisting_file_failure(self):
         # Sign a non-existent file
-        non_existing_file = os.path.join(TMP_TEST_DIR, "non_existent_file")
+        non_existing_file = os.path.join(CURRENT_TEST_DIR, "non_existent_file")
         self.assertFalse(exists(non_existing_file))
         self.assertFalse(
             sign_file(

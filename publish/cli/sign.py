@@ -59,7 +59,14 @@ def main(args):
         print(f"File to sign not found: {file_}", file=sys.stderr)
         return FILE_NOT_FOUND
 
-    signed = sign_file(file_, key, output, sign_command, sign_args, verbose=verbose)
+    signed = sign_file(
+        file_,
+        key,
+        output=output,
+        sign_command=sign_command,
+        sign_args=sign_args,
+        verbose=verbose,
+    )
     if not signed:
         return SIGN_FAILURE
     return SUCCESS

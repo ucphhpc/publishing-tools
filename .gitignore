@@ -136,3 +136,6 @@ dmypy.json
 
 # Ignore any gpg generated files
 *.gpg
+
+# Ignore any tmp files
+tmp/

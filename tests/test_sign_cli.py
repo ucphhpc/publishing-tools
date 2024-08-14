@@ -82,15 +82,26 @@ class TestSignCLI(unittest.TestCase):
         self.assertEqual(return_code, FILE_NOT_FOUND)
 
     def test_sign_failure(self):
-        test_file_path = os.path.join(CURRENT_TEST_DIR, "test_sign_failure_file")
+        test_sign_file = os.path.join(CURRENT_TEST_DIR, "test_sign_failure_file")
         test_sign_file_content = "foo bar"
-        self.assertTrue(write(test_file_path, test_sign_file_content))
-        self.assertTrue(exists(test_file_path))
+        self.assertTrue(write(test_sign_file, test_sign_file_content))
+        self.assertTrue(exists(test_sign_file))
 
+        test_sign_file_output = f"{test_sign_file}.{KEY_GENERATOR}"
         key = "non_existing_key"
-        self.assertEqual(main([test_file_path, key]), SIGN_FAILURE)
-        self.assertTrue(remove(test_file_path))
-        self.assertFalse(exists(test_file_path))
+        self.assertEqual(
+            main(
+                [
+                    test_sign_file,
+                    key,
+                    "--sign-args",
+                    GPG_SIGN_ARGS,
+                    "--output",
+                    test_sign_file_output,
+                ]
+            ),
+            SIGN_FAILURE,
+        )
 
     def test_sign_success(self):
         test_sign_file = os.path.join(CURRENT_TEST_DIR, "test_sign_success_file")
@@ -98,8 +109,18 @@ class TestSignCLI(unittest.TestCase):
         self.assertTrue(write(test_sign_file, test_sign_file_content))
         self.assertTrue(exists(test_sign_file))
 
-        self.assertEqual(main([test_sign_file, TEST_KEY_NAME]), SUCCESS)
+        test_sign_file_output = f"{test_sign_file}.{KEY_GENERATOR}"
+        self.assertEqual(
+            main(
+                [
+                    test_sign_file,
+                    TEST_KEY_NAME,
+                    "--sign-args",
+                    GPG_SIGN_ARGS,
+                    "--output",
+                    test_sign_file_output,
+                ]
+            ),
+            SUCCESS,
+        )
         self.assertTrue(exists(f"{test_sign_file}.{KEY_GENERATOR}"))
-
-        self.assertTrue(remove(test_sign_file))
-        self.assertFalse(exists(test_sign_file))

@@ -49,6 +49,25 @@ def parse_args(args):
         help="Whether to also publish a signed file.",
     )
     parser.add_argument(
+        "--signature-generator",
+        "-sg",
+        default=SignatureTypes.GPG,
+        choices=[SignatureTypes.GPG],
+        help="Command to sign the file with.",
+    )
+    parser.add_argument(
+        "--signature-key",
+        "-sk",
+        default=None,
+        help="Path to the key to sign the file with.",
+    )
+    parser.add_argument(
+        "--signature-args",
+        "-sa",
+        default="--sign",
+        help="Additional arguments to pass to the sign command.",
+    )
+    parser.add_argument(
         "--verbose",
         "-v",
         action="store_true",
@@ -63,7 +82,11 @@ def main(args):
     file_ = os.path.realpath(os.path.expanduser(parsed_args.file))
     destination = parsed_args.destination
     with_checksum = parsed_args.with_checksum
+    checksum_algorithm = parsed_args.checksum_algorithm
     with_signature = parsed_args.with_signature
+    signature_generator = parsed_args.signature_generator
+    signature_key = parsed_args.signature_key
+    signature_args = parsed_args.signature_args
     verbose = parsed_args.verbose
 
     if not exists(file_):
@@ -77,7 +100,11 @@ def main(args):
         destination,
         PublishTypes.FILE,
         with_checksum=with_checksum,
+        checksum_algorithm=checksum_algorithm,
         with_signature=with_signature,
+        signature_generator=signature_generator,
+        signature_key=signature_key,
+        signauture_args=signature_args,
     ):
         return PUBLISH_FAILURE
 

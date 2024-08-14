@@ -25,11 +25,7 @@ def parse_args(args):
         "--publish-type",
         "-pt",
         default=PublishTypes.FILE,
-        choices=[
-            PublishTypes.FILE,
-            PublishTypes.CONTAINER_REGISTRY,
-            PublishTypes.GITHUB,
-        ],
+        choices=[PublishTypes.FILE],
     )
     parser.add_argument(
         "--checksum-file",

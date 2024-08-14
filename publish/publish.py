@@ -5,8 +5,7 @@ from publish.signature import sign_file, SignatureTypes
 
 class PublishTypes:
     FILE = "file"
-    CONTAINER_REGISTRY = "container_registry"
-    GITHUB = "github"
+    # TODO add container_registry and github publish types
 
 
 def checksum_file(path, algorithm="sha256"):
@@ -63,10 +62,6 @@ def publish(
 
     if publish_type == PublishTypes.FILE:
         return file_publish(source, destination)
-    elif publish_type == PublishTypes.CONTAINER_REGISTRY:
-        return container_registry_publish(source, destination)
-    elif publish_type == PublishTypes.GITHUB:
-        return github_publish(source, destination)
     return False
 
 
@@ -74,11 +69,3 @@ def file_publish(source, destination):
     if not exists(source):
         return False
     return copy(source, destination)
-
-
-def container_registry_publish(source, destination):
-    pass
-
-
-def github_publish(source, destination):
-    pass

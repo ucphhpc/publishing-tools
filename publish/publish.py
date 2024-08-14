@@ -8,13 +8,19 @@ class PublishTypes:
     # TODO add container_registry and github publish types
 
 
-def checksum_file(path, algorithm="sha256"):
+class ChecksumTypes:
+    SHA256 = "sha256"
+    SHA512 = "sha512"
+    MD5 = "md5"
+
+
+def checksum_file(path, algorithm=ChecksumTypes.SHA256):
     if not exists(path):
         return False
     return get_checksum(path, algorithm=algorithm)
 
 
-def write_checksum_file(path, destination=None, algorithm="sha256"):
+def write_checksum_file(path, destination=None, algorithm=ChecksumTypes.SHA256):
     checksum = checksum_file(path, algorithm=algorithm)
     if not checksum:
         return False
@@ -28,7 +34,7 @@ def publish(
     destination,
     publish_type,
     with_checksum=False,
-    checksum_algorithm="sha256",
+    checksum_algorithm=ChecksumTypes.SHA256,
     with_signature=False,
     signature_generator=SignatureTypes.GPG,
     signature_key=None,

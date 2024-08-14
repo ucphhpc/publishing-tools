@@ -6,7 +6,7 @@ from publish.signature import SignatureTypes, gen_key
 from publish.utils.io import makedirs, exists, remove, write
 from tests.common import TMP_TEST_PATH
 from publish.checksum import get_checksum
-from publish.publish import file_publish, publish, PublishTypes
+from publish.publish import file_publish, publish, PublishTypes, ChecksumTypes
 
 TEST_NAME = os.path.basename(__file__).split(".")[0]
 CURRENT_TEST_DIR = os.path.join(TMP_TEST_PATH, TEST_NAME)
@@ -14,7 +14,7 @@ TEST_PUBLISH_FILE = f"{TEST_NAME}_file"
 TEST_PUBLISH_DESTINATION = f"{TEST_NAME}_destination"
 TEST_FILE_CONTENT = "sfopawmdioamwioac aoimaw aw 2414 14"
 TEST_FILE_CHECKSUM = "16f8f5519fcb700a5b8ceb3e5eeace66f04c003f2c898237c202403e724214f8"
-CHECKSUM_ALGORITHM = "sha256"
+CHECKSUM_ALGORITHM = ChecksumTypes.SHA256
 
 # GPG settings
 TEST_KEY_NAME = f"{TEST_NAME}_key"

@@ -1,10 +1,10 @@
 import argparse
 import sys
 import os
-from publish.publish import PublishTypes
+from publish.publish import PublishTypes, publish, ChecksumTypes
 from publish.signature import sign_file
 from publish.utils.io import exists
-from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND
+from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND, PUBLISH_FAILURE
 
 SCRIPT_NAME = __file__
 
@@ -28,16 +28,25 @@ def parse_args(args):
         choices=[PublishTypes.FILE],
     )
     parser.add_argument(
-        "--checksum-file",
-        "-cf",
-        default=None,
-        help="Path to the checksum file to also publish.",
+        "--with-checksum",
+        "-wc",
+        action="store_true",
+        default=False,
+        help="Whether to also publish a checksum file.",
     )
     parser.add_argument(
-        "--signed-file",
-        "-sf",
-        default=None,
-        help="Path to the signed file to also publish.",
+        "--checksum-algorithm",
+        "-ca",
+        default=ChecksumTypes.SHA256,
+        choices=[ChecksumTypes.SHA256, ChecksumTypes.SHA512, ChecksumTypes.MD5],
+        help="Algorithm to use for the checksum.",
+    )
+    parser.add_argument(
+        "--with-signature",
+        "-ws",
+        action="store_true",
+        default=False,
+        help="Whether to also publish a signed file.",
     )
     parser.add_argument(
         "--verbose",
@@ -53,8 +62,8 @@ def main(args):
     parsed_args = parse_args(args)
     file_ = os.path.realpath(os.path.expanduser(parsed_args.file))
     destination = parsed_args.destination
-    checksum_file = parsed_args.checksum_file
-    signed_file = parsed_args.signed_file
+    with_checksum = parsed_args.with_checksum
+    with_signature = parsed_args.with_signature
     verbose = parsed_args.verbose
 
     if not exists(file_):
@@ -62,6 +71,15 @@ def main(args):
         return FILE_NOT_FOUND
     if verbose:
         print(f"Publishing file: {file_} to destination: {destination}")
+
+    if not publish(
+        file_,
+        destination,
+        PublishTypes.FILE,
+        with_checksum=with_checksum,
+        with_signature=with_signature,
+    ):
+        return PUBLISH_FAILURE
 
     return SUCCESS
 

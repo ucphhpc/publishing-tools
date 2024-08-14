@@ -10,6 +10,8 @@ from tests.common import TMP_TEST_PATH
 
 TEST_NAME = os.path.basename(__file__).split(".")[0]
 CURRENT_TEST_DIR = os.path.join(TMP_TEST_PATH, TEST_NAME)
+NON_EXISTING_FILE = "non_existing_file"
+NON_EXISTING_KEY = "non_existing_key"
 
 
 class TestVerifyCLI(unittest.TestCase):
@@ -33,8 +35,8 @@ class TestVerifyCLI(unittest.TestCase):
         self.assertEqual(return_code, SUCCESS)
 
     def test_file_not_found(self):
-        file_ = "non_existing_file"
-        key = "non_existing_key"
+        file_ = NON_EXISTING_FILE
+        key = NON_EXISTING_KEY
         self.assertEqual(main([file_, key]), FILE_NOT_FOUND)
 
     def test_verify_failure(self):
@@ -43,7 +45,7 @@ class TestVerifyCLI(unittest.TestCase):
         self.assertTrue(write(test_sign_file, test_sign_file_content))
         self.assertTrue(exists(test_sign_file))
 
-        key = "non_existing_key"
+        key = NON_EXISTING_KEY
         self.assertEqual(main([test_sign_file, key]), VERIFY_FAILURE)
 
         self.assertTrue(remove(test_sign_file))

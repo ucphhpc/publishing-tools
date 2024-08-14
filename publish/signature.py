@@ -1,6 +1,11 @@
 import os
 from publish.utils.job import run
 
+
+class SignatureTypes:
+    GPG = "gpg"
+
+
 # When using the gpg --fingerprint command with --with-colons
 # the fingerprint is stored in the 10th field in the output string with the "fpr" prefix
 # if you split on the : character

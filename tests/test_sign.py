@@ -1,18 +1,24 @@
 import os
 import unittest
 
-from publish.gpg import sign_file, gen_key, delete_key, get_key_fingerprint
+from publish.signature import (
+    sign_file,
+    gen_key,
+    delete_key,
+    get_key_fingerprint,
+    SignatureTypes,
+)
 from publish.utils.io import makedirs, exists, remove, write
 import tests.base
-from tests.common import TMP_TEST_PATH, KEY_GENERATOR
+from tests.common import TMP_TEST_PATH
 
 TEST_NAME = os.path.basename(__file__).split(".")[0]
 CURRENT_TEST_DIR = os.path.join(TMP_TEST_PATH, TEST_NAME)
-TEST_KEY_NAME = f"{TEST_NAME}_key"
 
 # GPG settings
+TEST_KEY_NAME = f"{TEST_NAME}_key"
 TMP_TEST_GNUPG_DIR = os.path.join(CURRENT_TEST_DIR, ".gnupg")
-GPG_TEST_SIGN_KEYRING = f"{TEST_KEY_NAME}.gpg"
+GPG_TEST_SIGN_KEYRING = f"{TEST_KEY_NAME}.{SignatureTypes.GPG}"
 GPG_SIGN_COMMON_ARGS = [
     "--homedir",
     CURRENT_TEST_DIR,
@@ -43,13 +49,15 @@ class TestGpGSignFile(unittest.TestCase):
         # Gen sign test key
         assert (
             gen_key(
-                TEST_KEY_NAME, key_generator=KEY_GENERATOR, key_args=GPG_GEN_KEY_ARGS
+                TEST_KEY_NAME,
+                key_generator=SignatureTypes.GPG,
+                key_args=GPG_GEN_KEY_ARGS,
             )
             is True
         )
         cls.key_fingerprint = get_key_fingerprint(
             TEST_KEY_NAME,
-            key_generator=KEY_GENERATOR,
+            key_generator=SignatureTypes.GPG,
             key_args=GPG_GET_FINGERPRINT_ARGS,
         )
         assert cls.key_fingerprint is not None
@@ -60,7 +68,7 @@ class TestGpGSignFile(unittest.TestCase):
         assert (
             delete_key(
                 cls.key_fingerprint,
-                delete_command=KEY_GENERATOR,
+                delete_command=SignatureTypes.GPG,
                 delete_args=GPG_DELETE_ARGS,
             )
             is True
@@ -73,19 +81,21 @@ class TestGpGSignFile(unittest.TestCase):
         another_test_key = "another_test_key"
         self.assertTrue(
             gen_key(
-                another_test_key, key_args=GPG_GEN_KEY_ARGS, key_generator=KEY_GENERATOR
+                another_test_key,
+                key_args=GPG_GEN_KEY_ARGS,
+                key_generator=SignatureTypes.GPG,
             )
         )
         key_fingerprint = get_key_fingerprint(
             another_test_key,
-            key_generator=KEY_GENERATOR,
+            key_generator=SignatureTypes.GPG,
             key_args=GPG_GET_FINGERPRINT_ARGS,
         )
         self.assertIsNotNone(key_fingerprint)
         self.assertTrue(
             delete_key(
                 key_fingerprint,
-                delete_command=KEY_GENERATOR,
+                delete_command=SignatureTypes.GPG,
                 delete_args=GPG_DELETE_ARGS,
             )
         )
@@ -96,13 +106,13 @@ class TestGpGSignFile(unittest.TestCase):
         self.assertTrue(write(test_file_path, TEST_FILE_CONTENT))
         self.assertTrue(exists(test_file_path))
 
-        test_signed_file_ouput = f"{test_file_path}.{KEY_GENERATOR}"
+        test_signed_file_ouput = f"{test_file_path}.{SignatureTypes.GPG}"
         # Sign the temporary file
         self.assertTrue(
             sign_file(
                 test_file_path,
                 TEST_KEY_NAME,
-                sign_command=KEY_GENERATOR,
+                sign_command=SignatureTypes.GPG,
                 sign_args=GPG_SIGN_ARGS,
                 output=test_signed_file_ouput,
             )
@@ -119,7 +129,7 @@ class TestGpGSignFile(unittest.TestCase):
             sign_file(
                 non_existing_file,
                 TEST_KEY_NAME,
-                sign_command=KEY_GENERATOR,
+                sign_command=SignatureTypes.GPG,
                 sign_args=GPG_SIGN_ARGS,
             )
         )

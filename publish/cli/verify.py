@@ -3,7 +3,7 @@ import os
 import argparse
 from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND, VERIFY_FAILURE
 from publish.utils.io import exists
-from publish.gpg import verify_file
+from publish.signature import SignatureTypes, verify_file
 
 
 SCRIPT_NAME = __file__
@@ -22,7 +22,8 @@ def parse_args(args):
     parser.add_argument(
         "--verify-command",
         "-vc",
-        default="gpg",
+        default=SignatureTypes.GPG,
+        choices=[SignatureTypes.GPG],
         help="Command to verify the file with. Default is 'gpg'.",
     )
     # https://www.gnupg.org/documentation/manuals/gnupg24/gpg.1.html

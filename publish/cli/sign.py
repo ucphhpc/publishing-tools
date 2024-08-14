@@ -1,7 +1,7 @@
 import sys
 import os
 import argparse
-from publish.gpg import sign_file
+from publish.signature import SignatureTypes, sign_file
 from publish.utils.io import exists
 from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND, SIGN_FAILURE
 
@@ -27,7 +27,8 @@ def parse_args(args):
     parser.add_argument(
         "--sign-command",
         "-s",
-        default="gpg",
+        default=SignatureTypes.GPG,
+        choices=[SignatureTypes.GPG],
         help="Command to sign the file with. Default is 'gpg'.",
     )
     parser.add_argument(

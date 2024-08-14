@@ -2,9 +2,16 @@ import os
 import unittest
 
 import tests.base
-from publish.gpg import gen_key, delete_key, get_key_fingerprint, verify_file, sign_file
+from publish.signature import (
+    gen_key,
+    delete_key,
+    get_key_fingerprint,
+    verify_file,
+    sign_file,
+    SignatureTypes,
+)
 from publish.utils.io import makedirs, exists, remove, write
-from tests.common import TMP_TEST_PATH, KEY_GENERATOR
+from tests.common import TMP_TEST_PATH
 
 TEST_NAME = os.path.basename(__file__).split(".")[0]
 CURRENT_TEST_DIR = os.path.join(TMP_TEST_PATH, TEST_NAME)
@@ -13,7 +20,7 @@ TEST_KEY_NAME = f"{TEST_NAME}_key"
 # GPG settings
 TMP_TEST_GNUPG_DIR = os.path.join(CURRENT_TEST_DIR, ".gnupg")
 # Used for wrong gpg keychain tests
-GPP_WRONG_KEYCHAIN = "wrong-keyring.gpg"
+GPP_WRONG_KEYCHAIN = f"wrong-keyring.{SignatureTypes.GPG}"
 GPG_COMMON_WRONG_KEYCHAIN_ARGS = [
     "--homedir",
     TMP_TEST_GNUPG_DIR,
@@ -74,14 +81,14 @@ class TestGpGVerifyFile(unittest.TestCase):
         assert (
             gen_key(
                 TEST_KEY_NAME,
-                key_generator=KEY_GENERATOR,
+                key_generator=SignatureTypes.GPG,
                 key_args=GPG_GEN_KEY_ARGS,
             )
             is True
         )
         cls.key_fingerprint = get_key_fingerprint(
             TEST_KEY_NAME,
-            key_generator=KEY_GENERATOR,
+            key_generator=SignatureTypes.GPG,
             key_args=GPG_GET_FINTERPRINT_ARGS,
         )
         assert cls.key_fingerprint is not None
@@ -93,7 +100,7 @@ class TestGpGVerifyFile(unittest.TestCase):
         assert (
             delete_key(
                 cls.key_fingerprint,
-                delete_command=KEY_GENERATOR,
+                delete_command=SignatureTypes.GPG,
                 delete_args=GPG_DELETE_ARGS,
             )
             is True
@@ -108,7 +115,7 @@ class TestGpGVerifyFile(unittest.TestCase):
             verify_file(
                 TEST_VERIFY_FILE,
                 TEST_KEY_NAME,
-                verify_command=KEY_GENERATOR,
+                verify_command=SignatureTypes.GPG,
                 verify_args=GPG_VERIFY_ARGS,
             )
         )
@@ -116,12 +123,14 @@ class TestGpGVerifyFile(unittest.TestCase):
     def test_sign_with_nonexisting_key(self):
         non_existing_key = "non_existing_key"
         # Sign the file with a non-existing key
-        output_signed_file = f"{TEST_VERIFY_FILE}-{non_existing_key}.{KEY_GENERATOR}"
+        output_signed_file = (
+            f"{TEST_VERIFY_FILE}-{non_existing_key}.{SignatureTypes.GPG}"
+        )
         self.assertFalse(
             sign_file(
                 TEST_VERIFY_FILE,
                 non_existing_key,
-                sign_command=KEY_GENERATOR,
+                sign_command=SignatureTypes.GPG,
                 sign_args=GPG_SIGN_ARGS,
                 output=output_signed_file,
             )
@@ -130,12 +139,12 @@ class TestGpGVerifyFile(unittest.TestCase):
 
     def test_verify_success(self):
         # Sign the file to verify
-        output_signed_file = f"{TEST_VERIFY_FILE}.{KEY_GENERATOR}"
+        output_signed_file = f"{TEST_VERIFY_FILE}.{SignatureTypes.GPG}"
         self.assertTrue(
             sign_file(
                 TEST_VERIFY_FILE,
                 TEST_KEY_NAME,
-                sign_command=KEY_GENERATOR,
+                sign_command=SignatureTypes.GPG,
                 sign_args=GPG_SIGN_ARGS,
                 output=output_signed_file,
             )
@@ -144,7 +153,7 @@ class TestGpGVerifyFile(unittest.TestCase):
             verify_file(
                 output_signed_file,
                 TEST_KEY_NAME,
-                verify_command=KEY_GENERATOR,
+                verify_command=SignatureTypes.GPG,
                 verify_args=GPG_VERIFY_ARGS,
             )
         )
@@ -153,12 +162,12 @@ class TestGpGVerifyFile(unittest.TestCase):
     def test_verify_failure_wrong_keychain(self):
         # Sign the file to verify
         wrong_keychain = "wrong_keychain"
-        output_signed_file = f"{TEST_VERIFY_FILE}-{wrong_keychain}.{KEY_GENERATOR}"
+        output_signed_file = f"{TEST_VERIFY_FILE}-{wrong_keychain}.{SignatureTypes.GPG}"
         self.assertTrue(
             sign_file(
                 TEST_VERIFY_FILE,
                 TEST_KEY_NAME,
-                sign_command=KEY_GENERATOR,
+                sign_command=SignatureTypes.GPG,
                 sign_args=GPG_SIGN_ARGS,
                 output=output_signed_file,
             )
@@ -168,7 +177,7 @@ class TestGpGVerifyFile(unittest.TestCase):
             verify_file(
                 output_signed_file,
                 TEST_KEY_NAME,
-                verify_command=KEY_GENERATOR,
+                verify_command=SignatureTypes.GPG,
                 verify_args=GPG_VERIFY_WRONG_KEYCHAIN_ARGS,
             )
         )

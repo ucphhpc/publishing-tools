@@ -1,19 +1,19 @@
 import os
 import unittest
 
-from publish.gpg import gen_key, delete_key, get_key_fingerprint
+from publish.signature import gen_key, delete_key, get_key_fingerprint, SignatureTypes
 from publish.utils.io import exists, makedirs, remove, write
 from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND, SIGN_FAILURE
 from publish.cli.sign import main
 import tests.base
-from tests.common import TMP_TEST_PATH, KEY_GENERATOR
+from tests.common import TMP_TEST_PATH
 
 TEST_NAME = os.path.basename(__file__).split(".")[0]
 CURRENT_TEST_DIR = os.path.join(TMP_TEST_PATH, TEST_NAME)
 TEST_KEY_NAME = f"{TEST_NAME}_key"
 
 TMP_TEST_GNUPG_DIR = os.path.join(CURRENT_TEST_DIR, ".gnupg")
-GPG_TEST_SIGN_KEYRING = f"{TEST_NAME}.gpg"
+GPG_TEST_SIGN_KEYRING = f"{TEST_NAME}.{SignatureTypes.GPG}"
 GPG_SIGN_COMMON_ARGS = [
     "--homedir",
     TMP_TEST_GNUPG_DIR,
@@ -41,13 +41,15 @@ class TestSignCLI(unittest.TestCase):
         # Gen sign test key
         assert (
             gen_key(
-                TEST_KEY_NAME, key_generator=KEY_GENERATOR, key_args=GPG_GEN_KEY_ARGS
+                TEST_KEY_NAME,
+                key_generator=SignatureTypes.GPG,
+                key_args=GPG_GEN_KEY_ARGS,
             )
             is True
         )
         cls.key_fingerprint = get_key_fingerprint(
             TEST_KEY_NAME,
-            key_generator=KEY_GENERATOR,
+            key_generator=SignatureTypes.GPG,
             key_args=GPG_GET_FINGERPRINT_ARGS,
         )
         assert cls.key_fingerprint is not None
@@ -58,7 +60,7 @@ class TestSignCLI(unittest.TestCase):
         assert (
             delete_key(
                 cls.key_fingerprint,
-                delete_command=KEY_GENERATOR,
+                delete_command=SignatureTypes.GPG,
                 delete_args=GPG_DELETE_ARGS,
             )
             is True
@@ -87,7 +89,7 @@ class TestSignCLI(unittest.TestCase):
         self.assertTrue(write(test_sign_file, test_sign_file_content))
         self.assertTrue(exists(test_sign_file))
 
-        test_sign_file_output = f"{test_sign_file}.{KEY_GENERATOR}"
+        test_sign_file_output = f"{test_sign_file}.{SignatureTypes.GPG}"
         key = "non_existing_key"
         self.assertEqual(
             main(
@@ -109,7 +111,7 @@ class TestSignCLI(unittest.TestCase):
         self.assertTrue(write(test_sign_file, test_sign_file_content))
         self.assertTrue(exists(test_sign_file))
 
-        test_sign_file_output = f"{test_sign_file}.{KEY_GENERATOR}"
+        test_sign_file_output = f"{test_sign_file}.{SignatureTypes.GPG}"
         self.assertEqual(
             main(
                 [
@@ -123,4 +125,4 @@ class TestSignCLI(unittest.TestCase):
             ),
             SUCCESS,
         )
-        self.assertTrue(exists(f"{test_sign_file}.{KEY_GENERATOR}"))
+        self.assertTrue(exists(f"{test_sign_file}.{SignatureTypes.GPG}"))

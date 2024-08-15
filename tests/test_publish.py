@@ -1,12 +1,11 @@
-import unittest
 import os
-import tests.base
+import unittest
 
 from publish.signature import SignatureTypes, gen_key
 from publish.utils.io import makedirs, exists, remove, write
-from tests.common import TMP_TEST_PATH
 from publish.checksum import get_checksum
-from publish.publish import file_publish, publish, PublishTypes, ChecksumTypes
+from publish.publish import publish, PublishTypes, ChecksumTypes
+from tests.common import TMP_TEST_PATH
 
 TEST_NAME = os.path.basename(__file__).split(".")[0]
 CURRENT_TEST_DIR = os.path.join(TMP_TEST_PATH, TEST_NAME)

@@ -1,7 +1,6 @@
 import os
 import unittest
 
-import tests.base
 from publish.signature import (
     gen_key,
     delete_key,

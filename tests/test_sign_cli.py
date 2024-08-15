@@ -5,7 +5,6 @@ from publish.signature import gen_key, delete_key, get_key_fingerprint, Signatur
 from publish.utils.io import exists, makedirs, remove, write
 from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND, SIGN_FAILURE
 from publish.cli.sign import main
-import tests.base
 from tests.common import TMP_TEST_PATH
 
 TEST_NAME = os.path.basename(__file__).split(".")[0]

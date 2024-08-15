@@ -9,7 +9,6 @@ from publish.signature import (
     SignatureTypes,
 )
 from publish.utils.io import makedirs, exists, remove, write
-import tests.base
 from tests.common import TMP_TEST_PATH
 
 TEST_NAME = os.path.basename(__file__).split(".")[0]

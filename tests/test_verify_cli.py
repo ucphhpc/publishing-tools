@@ -1,7 +1,6 @@
 import os
 import unittest
 
-import tests.base
 from publish.utils.io import exists, makedirs, remove, write
 from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND, VERIFY_FAILURE
 from publish.cli.verify import main

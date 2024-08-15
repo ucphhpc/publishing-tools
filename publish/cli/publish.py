@@ -1,8 +1,8 @@
 import argparse
 import sys
 import os
+from publish.signature import SignatureTypes
 from publish.publish import PublishTypes, publish, ChecksumTypes
-from publish.signature import sign_file
 from publish.utils.io import exists
 from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND, PUBLISH_FAILURE
 
@@ -107,7 +107,6 @@ def main(args):
         signauture_args=signature_args,
     ):
         return PUBLISH_FAILURE
-
     return SUCCESS
 
 

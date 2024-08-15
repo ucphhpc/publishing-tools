@@ -2,8 +2,7 @@ import os
 import unittest
 
 from publish.signature import SignatureTypes, gen_key
-from publish.utils.io import makedirs, exists, remove, write
-from publish.checksum import get_checksum
+from publish.utils.io import makedirs, exists, remove, write, hashsum
 from publish.publish import publish, PublishTypes, ChecksumTypes
 from tests.common import TMP_TEST_PATH
 
@@ -63,7 +62,7 @@ class TestPublishFile(unittest.TestCase):
 
     def test_source_file_checksum(self):
         # Get the checksum of the file
-        checksum = get_checksum(self.publish_source)
+        checksum = hashsum(self.publish_source, algorithm=CHECKSUM_ALGORITHM)
         self.assertIsNotNone(checksum)
         self.assertEqual(checksum, TEST_FILE_CHECKSUM)
 

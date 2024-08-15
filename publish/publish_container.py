@@ -1,0 +1,94 @@
+from podman import PodmanClient
+from podman.errors import ImageNotFound, APIError, BuildError
+
+from publish.utils.io import i_write
+
+
+def container_publish_to_registry(
+    source, destination, container_client_kwargs=None, verbose=False
+):
+    """
+    Publishes a container image from source to destination.
+    The source is the image name and tag of the pre-built image that is to be published.
+    The destination is the registry URL and the image name and tag to publish the image to.
+    """
+    if not container_client_kwargs:
+        container_client_kwargs = {}
+
+    # PodmanClient expects a user avaiable socket by default.
+    # This means that when executed by a non-root user, the podman socket should be started
+    # as a user service. e.g. systemctl --user enable/start podman
+    # Another socket option can be set via the base_url parameter.
+    # https://podman-py.readthedocs.io/en/stable/podman.client.html
+    with PodmanClient(**container_client_kwargs) as client:
+        image_to_publish = get_image(client, source)
+        if not image_to_publish:
+            return False
+        try:
+            return client.images.push(image_to_publish, destination=destination)
+        except APIError as error:
+            if verbose:
+                print(f"Error publishing image: {error}")
+            return False
+    return False
+
+
+def container_publish_to_archive(
+    source, destination, container_client_kwargs=None, verbose=False
+):
+    if not container_client_kwargs:
+        container_client_kwargs = {}
+
+    with PodmanClient(**container_client_kwargs) as client:
+        image_to_archive = get_image(client, source)
+        if not image_to_archive:
+            return False
+        try:
+            # Returns a tarball of the image
+            tarball = image_to_archive.save()
+            return i_write(destination, tarball, mode="wb")
+        except APIError as error:
+            if verbose:
+                print(f"Error saving image: {error}")
+            return False
+    return False
+
+
+def build_image(container_client_kwargs=None, **build_kwargs):
+    # Options for the possible build_kwargs can be seen at
+    # https://podman-py.readthedocs.io/en/stable/podman.domain.images_manager.html#podman.domain.images_manager.ImagesManager.build
+    if not container_client_kwargs:
+        container_client_kwargs = {}
+
+    with PodmanClient(**container_client_kwargs) as client:
+        try:
+            image = client.images.build(
+                **build_kwargs
+            )
+            return isinstance(podman.domain.images.Image, image[0])
+        except (BuildError, APIError, TypeError) as error:
+            print(f"Error building image: {error}")
+            return False
+    return False
+
+
+def remove_image(name_or_id, container_client_kwargs=None, verbose=False):
+    if not container_client_kwargs:
+        container_client_kwargs = {}
+
+    with PodmanClient(**container_client_kwargs) as client:
+        try:
+            return client.images.remove(name_or_id)
+        except APIError as error:
+            if verbose:
+                print(f"Error removing image: {error}")
+            return False
+    return False
+
+
+def get_image(client, image_name_or_id):
+    try:
+        return client.images.get(image_name_or_id)
+    except ImageNotFound:
+        return None
+    return None

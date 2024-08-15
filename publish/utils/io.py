@@ -55,6 +55,24 @@ def write(path, content, mode="w", mkdirs=False, opener=None):
     return False
 
 
+def i_write(path, i_content, mode="w", mkdirs=False, opener=None):
+    if not opener:
+        opener = open
+
+    dir_path = os.path.dirname(path)
+    if not os.path.exists(dir_path) and mkdirs:
+        if not makedirs(dir_path):
+            return False
+    try:
+        with opener(path, mode) as fh:
+            for chunk in i_content:
+                fh.write(chunk)
+        return True
+    except Exception as err:
+        print("Failed to save file: {} - {}".format(path, err))
+    return False
+
+
 def copy(src, dst):
     try:
         shutil.copy(src, dst)
@@ -233,9 +251,12 @@ def load_json(path, opener=None):
 
 
 # Read chunks of a file, default to 64KB
-def hashsum(path, algorithm="sha1", buffer_size=65536):
+def hashsum(path, algorithm="sha256", buffer_size=65536):
     try:
         import hashlib
+
+        if algorithm not in hashlib.algorithms_available:
+            return False
 
         hash_algorithm = hashlib.new(algorithm)
         with open(path, "rb") as fh:

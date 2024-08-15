@@ -1,11 +1,16 @@
-from publish.utils.io import exists, copy, write
-from publish.checksum import get_checksum
+from publish.utils.io import exists, copy, write, hashsum
 from publish.signature import sign_file, SignatureTypes
+from publish.publish_container import (
+    container_publish_to_archive,
+    container_publish_to_registry,
+)
 
 
 class PublishTypes:
     FILE = "file"
-    # TODO add container_registry and github publish types
+    CONTAINER_IMAGE_REGISTRY = "container_image_registry"
+    CONTAINER_IMAGE_ARCHIVE = "container_image_archive"
+    # TODO add github publish type
 
 
 class ChecksumTypes:
@@ -17,7 +22,7 @@ class ChecksumTypes:
 def checksum_file(path, algorithm=ChecksumTypes.SHA256):
     if not exists(path):
         return False
-    return get_checksum(path, algorithm=algorithm)
+    return hashsum(path, algorithm=algorithm)
 
 
 def write_checksum_file(path, destination=None, algorithm=ChecksumTypes.SHA256):
@@ -40,38 +45,57 @@ def publish(
     signature_key=None,
     signauture_args=None,
 ):
-    if with_checksum:
-        if publish_type == PublishTypes.FILE:
-            checksum_file_destination = f"{destination}.{checksum_algorithm}"
-            checksum_file = write_checksum_file(
-                source,
-                destination=checksum_file_destination,
-                algorithm=checksum_algorithm,
-            )
-            if not checksum_file:
-                return False
-
-    if with_signature:
-        if publish_type == PublishTypes.FILE:
-            if not signature_key:
-                return False
-            signature_file_destination = f"{destination}.{signature_generator}"
-            signed_file = sign_file(
-                source,
-                signature_key,
-                sign_command=signature_generator,
-                sign_args=signauture_args,
-                output=signature_file_destination,
-            )
-            if not signed_file:
-                return False
-
+    checksum_input, signature_input = None, None
     if publish_type == PublishTypes.FILE:
-        return file_publish(source, destination)
-    return False
+        published = file_publish(source, destination)
+        if not published:
+            return False
+        checksum_input = signature_input = destination
+    elif publish_type == PublishTypes.CONTAINER_IMAGE_REGISTRY:
+        published = container_publish_to_registry(source, destination)
+        if not published:
+            return False
+    elif publish_type == PublishTypes.CONTAINER_IMAGE_ARCHIVE:
+        archived = container_publish_to_archive(source, destination)
+        if not archived:
+            return False
+        checksum_input = signature_input = destination
+    else:
+        return False
+
+    # Because we need to publish the archive file before we can
+    # calculate the checksum and sign it, we need to do it here.
+    if with_checksum and checksum_input and exists(checksum_input):
+        checksum_file_destination = f"{checksum_input}.{checksum_algorithm}"
+        checksum_file = write_checksum_file(
+            checksum_input,
+            destination=checksum_file_destination,
+            algorithm=checksum_algorithm,
+        )
+        if not checksum_file:
+            return False
+
+    if with_signature and signature_input and exists(signature_input):
+        if not signature_key:
+            return False
+        signature_file_destination = f"{signature_input}.{signature_generator}"
+        signed_file = sign_file(
+            signature_input,
+            signature_key,
+            sign_command=signature_generator,
+            sign_args=signauture_args,
+            output=signature_file_destination,
+        )
+        if not signed_file:
+            return False
+    return True
 
 
 def file_publish(source, destination):
+    """
+    Publishes a file from source to destination by copy.
+    The destination can be either a directory or a file.
+    """
     if not exists(source):
         return False
     return copy(source, destination)

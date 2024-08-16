@@ -24,7 +24,7 @@ def parse_args(args):
         "source",
         help="The source input to publish.",
     )
-    parser.add_argument("destination", help="Path to the destination to publish to.")
+    parser.add_argument("destination", help="Path to the destination to publish to, can be either a directory .")
     parser.add_argument(
         "--publish-type",
         "-pt",

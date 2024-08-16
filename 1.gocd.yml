@@ -1,13 +1,13 @@
 environments:
-  publish_container_tools:
+  publishing_tools:
     environment_variables:
       GIT_USER: "{{SECRET:[github][username]}}"
-      PYPI_USERNAME: "{{SECRET:[publish_container_tools][username]}}"
-      PYPI_PASSWORD: "{{SECRET:[publish_container_tools][password]}}"
+      PYPI_USERNAME: "{{SECRET:[publishing_tools][username]}}"
+      PYPI_PASSWORD: "{{SECRET:[publishing_tools][password]}}"
     pipelines:
-      - publish-container-tools
+      - publishing-tools
 pipelines:
-  publish-container-tools:
+  publishing-tools:
     group: pypi_package
     locking: off
     timer:
@@ -15,11 +15,11 @@ pipelines:
       spec: "0 0 0 1 * ? *"
       only_on_changes: no
     materials:
-      publish-container-tools_git:  # this is the name of material
+      publishing-tools_git:  # this is the name of material
         # says about type of material and url at once
-        git: https://github.com/ucphhpc/publish-container-tools.git
+        git: https://github.com/ucphhpc/publishing-tools.git
         branch: main
-        destination: publish-container-tools
+        destination: publishing-tools
       publish_python_git:
         git: https://github.com/rasmunk/publish-python-scripts.git
         username: ${GIT_USER}
@@ -28,7 +28,7 @@ pipelines:
         destination: publish-python-scripts
     parameters:
       ARGS: ''
-      SRC_DIRECTORY: publish-container-tools
-      TEST_DIRECTORY: publish-container-tools
+      SRC_DIRECTORY: publishing-tools
+      TEST_DIRECTORY: publishing-tools
       PUSH_DIRECTORY: publish-python-scripts
     template: pypi_package

@@ -1,4 +1,4 @@
-PACKAGE_NAME=publish-container-tools
+PACKAGE_NAME=publishing-tools
 PACKAGE_NAME_FORMATTED=$(subst -,_,${PACKAGE_NAME})
 
 .PHONY: all

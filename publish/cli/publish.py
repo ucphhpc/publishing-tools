@@ -24,9 +24,7 @@ def parse_args(args):
         "source",
         help="The source input to publish.",
     )
-    parser.add_argument(
-        "destination", help="Path to the destination to publish the file to."
-    )
+    parser.add_argument("destination", help="Path to the destination to publish to.")
     parser.add_argument(
         "--publish-type",
         "-pt",
@@ -127,8 +125,8 @@ def main(args):
 
 
 def cli():
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

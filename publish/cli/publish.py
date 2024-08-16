@@ -25,7 +25,7 @@ def parse_args(args):
         "--publish-type",
         "-pt",
         default=PublishTypes.FILE,
-        choices=[PublishTypes.FILE],
+        choices=[PublishTypes.FILE, PublishTypes.CONTAINER_IMAGE_ARCHIVE],
     )
     parser.add_argument(
         "--with-checksum",
@@ -81,6 +81,7 @@ def main(args):
     parsed_args = parse_args(args)
     file_ = os.path.realpath(os.path.expanduser(parsed_args.file))
     destination = parsed_args.destination
+    publish_type = parsed_args.publish_type
     with_checksum = parsed_args.with_checksum
     checksum_algorithm = parsed_args.checksum_algorithm
     with_signature = parsed_args.with_signature
@@ -98,7 +99,7 @@ def main(args):
     if not publish(
         file_,
         destination,
-        PublishTypes.FILE,
+        publish_type,
         with_checksum=with_checksum,
         checksum_algorithm=checksum_algorithm,
         with_signature=with_signature,

@@ -57,7 +57,14 @@ class TestPublishContainerImage(unittest.TestCase):
         if not exists(cls.publish_directory):
             assert makedirs(cls.publish_directory) is True
         # TODO: Build the container image that is used to test the publish functionality
-        assert build_image(path=LOCAL_IMAGE_DOCKERFILE, tag=LOCAL_IMAGE_NAME) is True
+        assert (
+            build_image(
+                path=TESTS_RESOURCES_DIR,
+                dockerfile=LOCAL_IMAGE_DOCKERFILE,
+                tag=LOCAL_IMAGE_NAME,
+            )
+            is True
+        )
 
     @classmethod
     def tearDownClass(cls):

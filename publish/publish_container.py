@@ -1,4 +1,5 @@
 from podman import PodmanClient
+from podman.domain.images import Image
 from podman.errors import ImageNotFound, APIError, BuildError
 
 from publish.utils.io import i_write
@@ -62,10 +63,8 @@ def build_image(container_client_kwargs=None, **build_kwargs):
 
     with PodmanClient(**container_client_kwargs) as client:
         try:
-            image = client.images.build(
-                **build_kwargs
-            )
-            return isinstance(podman.domain.images.Image, image[0])
+            image = client.images.build(**build_kwargs)
+            return isinstance(image[0], Image)
         except (BuildError, APIError, TypeError) as error:
             print(f"Error building image: {error}")
             return False
@@ -78,8 +77,11 @@ def remove_image(name_or_id, container_client_kwargs=None, verbose=False):
 
     with PodmanClient(**container_client_kwargs) as client:
         try:
-            return client.images.remove(name_or_id)
-        except APIError as error:
+            results = client.images.remove(name_or_id)
+            for result in results:
+                if result.get("ExitCode") == 0:
+                    return True
+        except (APIError, ImageNotFound) as error:
             if verbose:
                 print(f"Error removing image: {error}")
             return False

@@ -25,17 +25,17 @@ def parse_args(args):
         help="Path to the output file. Default is None, which will output to the FILE path with the --sign-command extension.",
     )
     parser.add_argument(
-        "--sign-command",
-        "-s",
+        "--signature-generator",
+        "-sg",
         default=SignatureTypes.GPG,
         choices=[SignatureTypes.GPG],
-        help="Command to sign the file with. Default is 'gpg'.",
+        help="Which signaturer to use to sign the file.",
     )
     parser.add_argument(
-        "--sign-args",
-        "-a",
+        "--signature-args",
+        "-sa",
         default="--sign",
-        help="Additional arguments to pass to the sign command.",
+        help="Optional arguments to give the selected --signature-generator.",
     )
     parser.add_argument(
         "--verbose",
@@ -52,8 +52,8 @@ def main(args):
     file_ = os.path.realpath(os.path.expanduser(parsed_args.file))
     key = parsed_args.key
     output = parsed_args.output
-    sign_command = parsed_args.sign_command
-    sign_args = parsed_args.sign_args
+    signature_generator = parsed_args.signature_generator
+    signature_args = parsed_args.signature_args
     verbose = parsed_args.verbose
 
     if not exists(file_):
@@ -64,8 +64,8 @@ def main(args):
         file_,
         key,
         output=output,
-        sign_command=sign_command,
-        sign_args=sign_args,
+        sign_command=signature_generator,
+        sign_args=signature_args,
         verbose=verbose,
     )
     if not signed:

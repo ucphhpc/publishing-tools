@@ -95,7 +95,7 @@ class TestSignCLI(unittest.TestCase):
                 [
                     test_sign_file,
                     key,
-                    "--sign-args",
+                    "--signature-args",
                     GPG_SIGN_ARGS,
                     "--output",
                     test_sign_file_output,
@@ -116,7 +116,7 @@ class TestSignCLI(unittest.TestCase):
                 [
                     test_sign_file,
                     TEST_KEY_NAME,
-                    "--sign-args",
+                    "--signature-args",
                     GPG_SIGN_ARGS,
                     "--output",
                     test_sign_file_output,

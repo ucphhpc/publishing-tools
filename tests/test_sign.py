@@ -27,8 +27,15 @@ GPG_SIGN_COMMON_ARGS = [
     "--no-tty",
     "--batch",
 ]
-GPG_GEN_KEY_ARGS = GPG_SIGN_COMMON_ARGS + ["--quick-gen-key", "--passphrase", ""]
-GPG_GET_FINGERPRINT_ARGS = GPG_SIGN_COMMON_ARGS + ["--with-colons", "--fingerprint"]
+GPG_GEN_KEY_ARGS = GPG_SIGN_COMMON_ARGS + [
+    "--quick-gen-key",
+    "--passphrase",
+    "",
+]
+GPG_GET_FINGERPRINT_ARGS = GPG_SIGN_COMMON_ARGS + [
+    "--with-colons",
+    "--fingerprint",
+]
 GPG_SIGN_ARGS = GPG_SIGN_COMMON_ARGS + ["--sign", "--passphrase", ""]
 GPG_DELETE_ARGS = GPG_SIGN_COMMON_ARGS + [
     "--delete-secret-and-public-key",

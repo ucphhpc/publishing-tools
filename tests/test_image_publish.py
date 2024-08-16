@@ -30,7 +30,11 @@ GPG_SIGN_COMMON_ARGS = [
     "--no-tty",
     "--batch",
 ]
-GPG_GEN_KEY_ARGS = GPG_SIGN_COMMON_ARGS + ["--quick-gen-key", "--passphrase", ""]
+GPG_GEN_KEY_ARGS = GPG_SIGN_COMMON_ARGS + [
+    "--quick-gen-key",
+    "--passphrase",
+    "",
+]
 GPG_SIGN_ARGS = GPG_SIGN_COMMON_ARGS + ["--sign", "--passphrase", ""]
 
 # Local image settings

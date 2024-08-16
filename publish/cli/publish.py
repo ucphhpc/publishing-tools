@@ -42,7 +42,11 @@ def parse_args(args):
         "--checksum-algorithm",
         "-ca",
         default=ChecksumTypes.SHA256,
-        choices=[ChecksumTypes.SHA256, ChecksumTypes.SHA512, ChecksumTypes.MD5],
+        choices=[
+            ChecksumTypes.SHA256,
+            ChecksumTypes.SHA512,
+            ChecksumTypes.MD5,
+        ],
         help="Which checksum algorithm to use when --with-checksum is enabled.",
     )
     parser.add_argument(

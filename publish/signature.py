@@ -117,7 +117,12 @@ def delete_key(key_fingerprint, delete_command="gpg", delete_args=None, verbose=
 
 
 def sign_file(
-    file_, key_name, sign_command="gpg", sign_args=None, output=None, verbose=False
+    file_,
+    key_name,
+    sign_command="gpg",
+    sign_args=None,
+    output=None,
+    verbose=False,
 ):
     filename = os.path.basename(file_)
     if not output:

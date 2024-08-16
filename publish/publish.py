@@ -1,19 +1,18 @@
+from enum import StrEnum
 from publish.utils.io import exists, copy, write, hashsum
 from publish.signature import sign_file, SignatureTypes
-from publish.publish_container import (
-    container_publish_to_archive,
-    container_publish_to_registry,
-)
+from publish.publish_container import container_publish_to_archive
 
 
-class PublishTypes:
+class PublishTypes(StrEnum):
     FILE = "file"
-    CONTAINER_IMAGE_REGISTRY = "container_image_registry"
     CONTAINER_IMAGE_ARCHIVE = "container_image_archive"
-    # TODO add github publish type
 
 
-class ChecksumTypes:
+# TODO add GITHUB and CONTAINER_IMAGE_REGISTRY types
+
+
+class ChecksumTypes(StrEnum):
     SHA256 = "sha256"
     SHA512 = "sha512"
     MD5 = "md5"
@@ -51,10 +50,6 @@ def publish(
         if not published:
             return False
         checksum_input = signature_input = destination
-    elif publish_type == PublishTypes.CONTAINER_IMAGE_REGISTRY:
-        published = container_publish_to_registry(source, destination)
-        if not published:
-            return False
     elif publish_type == PublishTypes.CONTAINER_IMAGE_ARCHIVE:
         archived = container_publish_to_archive(source, destination)
         if not archived:

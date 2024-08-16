@@ -3,8 +3,14 @@ import sys
 import os
 from publish.signature import SignatureTypes
 from publish.publish import PublishTypes, publish, ChecksumTypes
+from publish.publish_container import get_image
 from publish.utils.io import exists
-from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND, PUBLISH_FAILURE
+from publish.cli.return_codes import (
+    SUCCESS,
+    FILE_NOT_FOUND,
+    IMAGE_NOT_FOUND,
+    PUBLISH_FAILURE,
+)
 
 SCRIPT_NAME = __file__
 
@@ -15,8 +21,8 @@ def parse_args(args):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "file",
-        help="Path to the file to publish.",
+        "source",
+        help="The source input to publish.",
     )
     parser.add_argument(
         "destination", help="Path to the destination to publish the file to."
@@ -79,7 +85,7 @@ def parse_args(args):
 
 def main(args):
     parsed_args = parse_args(args)
-    file_ = os.path.realpath(os.path.expanduser(parsed_args.file))
+    source = parsed_args.source
     destination = parsed_args.destination
     publish_type = parsed_args.publish_type
     with_checksum = parsed_args.with_checksum
@@ -90,14 +96,23 @@ def main(args):
     signature_args = parsed_args.signature_args
     verbose = parsed_args.verbose
 
-    if not exists(file_):
-        print(f"File to publish not found: {file_}", file=sys.stderr)
-        return FILE_NOT_FOUND
+    if publish_type == PublishTypes.FILE:
+        file_path = os.path.realpath(os.path.expanduser(source))
+        if not exists(file_path):
+            print(f"File to publish not found: {file_path}", file=sys.stderr)
+            return FILE_NOT_FOUND
+        else:
+            source = file_path
+
+    if publish_type == PublishTypes.CONTAINER_IMAGE_ARCHIVE and not get_image(source):
+        print(f"Container image to publish not found: {source}", file=sys.stderr)
+        return IMAGE_NOT_FOUND
+
     if verbose:
-        print(f"Publishing file: {file_} to destination: {destination}")
+        print(f"Publishing source: {source} to destination: {destination}")
 
     if not publish(
-        file_,
+        source,
         destination,
         publish_type,
         with_checksum=with_checksum,

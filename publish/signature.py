@@ -1,8 +1,9 @@
 import os
+from enum import StrEnum
 from publish.utils.job import run
 
 
-class SignatureTypes:
+class SignatureTypes(StrEnum):
     GPG = "gpg"
 
 

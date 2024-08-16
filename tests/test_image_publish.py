@@ -5,13 +5,17 @@ from publish.utils.io import exists, makedirs, remove, hashsum, load
 from publish.signature import gen_key, SignatureTypes
 from publish.publish import publish, PublishTypes, ChecksumTypes
 from publish.publish_container import build_image, remove_image
-from tests.common import TMP_TEST_PATH, BASE_TESTS_PATH
+from tests.common import (
+    TMP_TEST_PATH,
+    TESTS_RESOURCES_DIR,
+    TESTS_DOCKERFILE,
+    LOCAL_OWNER,
+    LOCAL_REGISTRY,
+)
 
 
 TEST_NAME = os.path.basename(__file__).split(".")[0]
-TESTS_RESOURCES_DIR = os.path.join(BASE_TESTS_PATH, "res")
 CURRENT_TEST_DIR = os.path.join(TMP_TEST_PATH, TEST_NAME)
-CHECKSUM_ALGORITHM = ChecksumTypes.SHA256
 
 # GPG settings
 TEST_KEY_NAME = f"{TEST_NAME}_key"
@@ -30,10 +34,7 @@ GPG_GEN_KEY_ARGS = GPG_SIGN_COMMON_ARGS + ["--quick-gen-key", "--passphrase", ""
 GPG_SIGN_ARGS = GPG_SIGN_COMMON_ARGS + ["--sign", "--passphrase", ""]
 
 # Local image settings
-LOCAL_REGISTRY = "localhost"
-LOCAL_OWNER = "test"
 TEST_PUBLISH_CONTAINER_IMAGE = f"{TEST_NAME}_container_image"
-LOCAL_IMAGE_DOCKERFILE = os.path.join(TESTS_RESOURCES_DIR, "Dockerfile")
 LOCAL_IMAGE_NAME = f"{LOCAL_REGISTRY}/{LOCAL_OWNER}/{TEST_PUBLISH_CONTAINER_IMAGE}"
 
 # Archive settings
@@ -50,17 +51,15 @@ TEST_PUBLISH_DESTINATION = f"{DESTINATION_REGISTRY}://{TEST_PUBLISH_CONTAINER_IM
 class TestPublishContainerImage(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        # Create a temporary directory to store the temporary test files to sign
         if not exists(CURRENT_TEST_DIR):
             assert makedirs(CURRENT_TEST_DIR) is True
         cls.publish_directory = os.path.join(CURRENT_TEST_DIR, TEST_PUBLISH_DESTINATION)
         if not exists(cls.publish_directory):
             assert makedirs(cls.publish_directory) is True
-        # TODO: Build the container image that is used to test the publish functionality
         assert (
             build_image(
                 path=TESTS_RESOURCES_DIR,
-                dockerfile=LOCAL_IMAGE_DOCKERFILE,
+                dockerfile=TESTS_DOCKERFILE,
                 tag=LOCAL_IMAGE_NAME,
             )
             is True
@@ -68,21 +67,9 @@ class TestPublishContainerImage(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        # Remove the temporary directory and its contents
         assert remove(CURRENT_TEST_DIR, recursive=True) is True
         assert not exists(CURRENT_TEST_DIR)
         assert remove_image(LOCAL_IMAGE_NAME) is True
-
-    # TODO, this test is not working because it needs either a
-    # valid or mock registry to test the publish to registry functionality
-    # def test_publish_image_to_registry(self):
-    #     self.assertTrue(
-    #         publish(
-    #             f"{LOCAL_REGISTRY}/{TEST_PUBLISH_CONTAINER_IMAGE}",
-    #             TEST_PUBLISH_DESTINATION,
-    #             PublishTypes.CONTAINER_IMAGE_REGISTRY,
-    #         )
-    #     )
 
     def test_publish_image_to_archive(self):
         publish_destination = os.path.join(
@@ -91,7 +78,7 @@ class TestPublishContainerImage(unittest.TestCase):
         )
         self.assertTrue(
             publish(
-                f"{LOCAL_REGISTRY}/{TEST_PUBLISH_CONTAINER_IMAGE}",
+                LOCAL_IMAGE_NAME,
                 publish_destination,
                 PublishTypes.CONTAINER_IMAGE_ARCHIVE,
             )
@@ -103,20 +90,20 @@ class TestPublishContainerImage(unittest.TestCase):
             self.publish_directory,
             f"{TEST_PUBLISH_CONTAINER_IMAGE}.{ARCHIVE_EXTENSION}-2",
         )
-        publish_checksum_destination = f"{publish_destination}.{CHECKSUM_ALGORITHM}"
+        publish_checksum_destination = f"{publish_destination}.{ChecksumTypes.SHA256}"
         self.assertTrue(
             publish(
-                f"{LOCAL_REGISTRY}/{TEST_PUBLISH_CONTAINER_IMAGE}",
+                LOCAL_IMAGE_NAME,
                 publish_destination,
                 PublishTypes.CONTAINER_IMAGE_ARCHIVE,
                 with_checksum=True,
-                checksum_algorithm=CHECKSUM_ALGORITHM,
+                checksum_algorithm=ChecksumTypes.SHA256,
             )
         )
         self.assertTrue(exists(publish_destination))
         self.assertTrue(exists(publish_checksum_destination))
         self.assertEqual(
-            hashsum(publish_destination, algorithm=CHECKSUM_ALGORITHM),
+            hashsum(publish_destination, algorithm=ChecksumTypes.SHA256),
             load(publish_checksum_destination),
         )
 
@@ -139,7 +126,7 @@ class TestPublishContainerImage(unittest.TestCase):
         # Sign the file with the key
         self.assertTrue(
             publish(
-                f"{LOCAL_REGISTRY}/{TEST_PUBLISH_CONTAINER_IMAGE}",
+                LOCAL_IMAGE_NAME,
                 publish_destination,
                 PublishTypes.CONTAINER_IMAGE_ARCHIVE,
                 with_signature=True,

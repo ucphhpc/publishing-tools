@@ -36,40 +36,40 @@ def parse_args(args):
         "-wc",
         action="store_true",
         default=False,
-        help="Whether to also publish a checksum file.",
+        help="Whether to also publish a checksum file in the destination directory.",
     )
     parser.add_argument(
         "--checksum-algorithm",
         "-ca",
         default=ChecksumTypes.SHA256,
         choices=[ChecksumTypes.SHA256, ChecksumTypes.SHA512, ChecksumTypes.MD5],
-        help="Algorithm to use for the checksum.",
+        help="Which checksum algorithm to use when --with-checksum is enabled.",
     )
     parser.add_argument(
         "--with-signature",
         "-ws",
         action="store_true",
         default=False,
-        help="Whether to also publish a signed file.",
+        help="Whether to also publish a signed edition of the source to the specified destination directory.",
     )
     parser.add_argument(
         "--signature-generator",
         "-sg",
         default=SignatureTypes.GPG,
         choices=[SignatureTypes.GPG],
-        help="Command to sign the file with.",
+        help="Which signaturer to use when --with-signature is enabled.",
     )
     parser.add_argument(
         "--signature-key",
         "-sk",
         default=None,
-        help="Path to the key to sign the file with.",
+        help="Which key should be used to sign with when --with-signature is enabled.",
     )
     parser.add_argument(
         "--signature-args",
         "-sa",
         default="--sign",
-        help="Additional arguments to pass to the sign command.",
+        help="Optional arguments to give the selected --signature-generator.",
     )
     parser.add_argument(
         "--verbose",

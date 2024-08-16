@@ -4,7 +4,7 @@ BUILD_ARGS=$2
 TAG=$3
 COMMIT_TAG=$4
 EXTRA_TAG=$5
-
+>
 if [[ -n ${DOCKERHUB_USERNAME} ]] && [[ -n ${DOCKERHUB_PASSWORD} ]]; then
     echo "${DOCKERHUB_PASSWORD}" | docker login -u ${DOCKERHUB_USERNAME} --password-stdin
 fi

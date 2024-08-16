@@ -23,17 +23,24 @@ with open(os.path.join(cur_dir, "version.py")) as f:
 
 long_description = open("README.rst").read()
 setup(
-    name="publish-container-tools",
+    name="publishing-tools",
     version=version_ns["__version__"],
-    description="Provides tools that can be used for signing, publishing, and verifying images.",
     long_description=long_description,
+    description="Tools that can be used for publishing/releasing packages and container images.",
     long_description_content_type="text/x-rst",
     author="Rasmus Munk",
     author_email="munk1@live.dk",
     packages=find_packages(),
-    url="https://github.com/rasmunk/publish-container-tools",
+    url="https://github.com/rasmunk/publishing-tools",
     license="MIT",
-    keywords=["Container Images", "Publishing", "Signing", "Verification"],
+    keywords=[
+        "Publishing",
+        "Signature",
+        "Checksum",
+        "Verification",
+        "Packages",
+        "Container Images",
+    ],
     install_requires=read_req("requirements.txt"),
     extras_require={
         "dev": read_req("requirements-dev.txt"),

@@ -1,7 +1,8 @@
 from enum import StrEnum
-from publish.utils.io import exists, copy, write, hashsum
+from publish.utils.io import exists, copy
 from publish.signature import sign_file, SignatureTypes
 from publish.publish_container import container_publish_to_archive
+from publish.checksum import ChecksumTypes, write_checksum_file
 
 
 class PublishTypes(StrEnum):
@@ -10,27 +11,6 @@ class PublishTypes(StrEnum):
 
 
 # TODO add GITHUB and CONTAINER_IMAGE_REGISTRY types
-
-
-class ChecksumTypes(StrEnum):
-    SHA256 = "sha256"
-    SHA512 = "sha512"
-    MD5 = "md5"
-
-
-def checksum_file(path, algorithm=ChecksumTypes.SHA256):
-    if not exists(path):
-        return False
-    return hashsum(path, algorithm=algorithm)
-
-
-def write_checksum_file(path, destination=None, algorithm=ChecksumTypes.SHA256):
-    checksum = checksum_file(path, algorithm=algorithm)
-    if not checksum:
-        return False
-    if not destination:
-        return write(path + f".{algorithm}", checksum)
-    return write(destination, checksum)
 
 
 def publish(
@@ -43,6 +23,7 @@ def publish(
     signature_generator=SignatureTypes.GPG,
     signature_key=None,
     signauture_args=None,
+    verbose=False,
 ):
     checksum_input, signature_input = None, None
     if publish_type == PublishTypes.FILE:
@@ -51,7 +32,7 @@ def publish(
             return False
         checksum_input = signature_input = destination
     elif publish_type == PublishTypes.CONTAINER_IMAGE_ARCHIVE:
-        archived = container_publish_to_archive(source, destination)
+        archived = container_publish_to_archive(source, destination, verbose=verbose)
         if not archived:
             return False
         checksum_input = signature_input = destination
@@ -80,6 +61,7 @@ def publish(
             sign_command=signature_generator,
             sign_args=signauture_args,
             output=signature_file_destination,
+            verbose=verbose,
         )
         if not signed_file:
             return False

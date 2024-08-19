@@ -19,7 +19,11 @@ GPG_VERIFY_SUCCESS_PREFIX = f"{GPG_VERIFY_OUTPUT_PREFIX}GOODSIG"
 
 
 def gen_key(
-    key_name, key_generator="gpg", key_args=None, verbose=False, **extra_kwargs
+    key_name,
+    key_generator=SignatureTypes.GPG,
+    key_args=None,
+    verbose=False,
+    **extra_kwargs,
 ):
     gen_command = [
         key_generator,
@@ -45,7 +49,9 @@ def gen_key(
     return True
 
 
-def get_key_fingerprint(key_name, key_generator="gpg", key_args=None, verbose=False):
+def get_key_fingerprint(
+    key_name, key_generator=SignatureTypes.GPG, key_args=None, verbose=False
+):
     fingerprint_command = [key_generator]
     if not key_args:
         key_args = [
@@ -87,7 +93,9 @@ def get_key_fingerprint(key_name, key_generator="gpg", key_args=None, verbose=Fa
     return fingerprint
 
 
-def delete_key(key_fingerprint, delete_command="gpg", delete_args=None, verbose=False):
+def delete_key(
+    key_fingerprint, delete_command=SignatureTypes.GPG, delete_args=None, verbose=False
+):
     del_command = [
         delete_command,
     ]
@@ -119,7 +127,7 @@ def delete_key(key_fingerprint, delete_command="gpg", delete_args=None, verbose=
 def sign_file(
     file_,
     key_name,
-    sign_command="gpg",
+    sign_command=SignatureTypes.GPG,
     sign_args=None,
     output=None,
     verbose=False,
@@ -137,19 +145,24 @@ def sign_file(
         )
 
     sign_job_command = [sign_command, "-u", key_name, "--output", output]
-    sign_job_command.extend(sign_args)
+    if sign_args:
+        sign_job_command.extend(sign_args)
     sign_job_command.append(file_)
+    if verbose:
+        print(f"Executing signing command: {' '.join(sign_job_command)}")
     success, result = run(sign_job_command, output_format="str")
     if not success:
         if verbose:
             print(
-                f"Failed to sign file: {file_}, output: {result['output']}, error: {result['error']}"
+                f"Failed to sign file: {file_}, output: {result['output']} error: {result['error']}"
             )
         return False
     return True
 
 
-def verify_file(file_, key_name, verify_command="gpg", verify_args=None, verbose=False):
+def verify_file(
+    file_, key_name, verify_command=SignatureTypes.GPG, verify_args=None, verbose=False
+):
     """
     Verify a file with a key using gpg by default.
     If the file is successfully verified, return True, otherwise return False.

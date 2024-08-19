@@ -10,7 +10,7 @@ from publish.signature import (
     SignatureTypes,
 )
 from publish.utils.io import makedirs, exists, remove, write
-from tests.common import TMP_TEST_PATH
+from tests.common import TMP_TEST_PATH, TEST_CONTENT
 
 TEST_NAME = os.path.basename(__file__).split(".")[0]
 CURRENT_TEST_DIR = os.path.join(TMP_TEST_PATH, TEST_NAME)
@@ -30,7 +30,7 @@ GPG_COMMON_WRONG_KEYCHAIN_ARGS = [
     "--batch",
 ]
 # Regular custom gpg keychain tests
-GPG_TEST_VERIFY_KEYRING = "verify-test-keyring.gpg"
+GPG_TEST_VERIFY_KEYRING = f"verify-test-keyring.{SignatureTypes.GPG}"
 GPG_COMMON_ARGS = [
     "--homedir",
     TMP_TEST_GNUPG_DIR,
@@ -67,7 +67,6 @@ GPG_VERIFY_WRONG_KEYCHAIN_ARGS = GPG_COMMON_WRONG_KEYCHAIN_ARGS + [
     "--verify",
 ]
 TEST_VERIFY_FILE = os.path.join(CURRENT_TEST_DIR, "test_verify_file")
-TEST_VERIFY_CONTENT = "foo bar baz"
 
 
 class TestGpGVerifyFile(unittest.TestCase):
@@ -91,7 +90,7 @@ class TestGpGVerifyFile(unittest.TestCase):
             key_args=GPG_GET_FINTERPRINT_ARGS,
         )
         assert cls.key_fingerprint is not None
-        assert write(TEST_VERIFY_FILE, TEST_VERIFY_CONTENT) is True
+        assert write(TEST_VERIFY_FILE, TEST_CONTENT) is True
 
     @classmethod
     def tearDownClass(cls):

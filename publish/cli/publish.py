@@ -24,7 +24,10 @@ def parse_args(args):
         "source",
         help="The source input to publish.",
     )
-    parser.add_argument("destination", help="Path to the destination to publish to, can be either a directory .")
+    parser.add_argument(
+        "destination",
+        help="Path to the destination to publish to, can be either a directory .",
+    )
     parser.add_argument(
         "--publish-type",
         "-pt",
@@ -72,7 +75,7 @@ def parse_args(args):
     parser.add_argument(
         "--signature-args",
         "-sa",
-        default="--sign",
+        default="--sign --batch",
         help="Optional arguments to give the selected --signature-generator.",
     )
     parser.add_argument(
@@ -110,6 +113,17 @@ def main(args):
         print(f"Container image to publish not found: {source}", file=sys.stderr)
         return IMAGE_NOT_FOUND
 
+    if with_signature and not signature_key:
+        print(
+            f"Failed to publish source: {source} with signature, no signature key provided. Please provide one via the --signature-key argument.",
+            file=sys.stderr,
+        )
+        return PUBLISH_FAILURE
+
+    if isinstance(signature_args, str):
+        # The underlying API expects a list of arguments
+        signature_args = signature_args.split()
+
     if verbose:
         print(f"Publishing source: {source} to destination: {destination}")
 
@@ -123,7 +137,12 @@ def main(args):
         signature_generator=signature_generator,
         signature_key=signature_key,
         signauture_args=signature_args,
+        verbose=verbose,
     ):
+        print(
+            f"Failed to correctly publish source: {source} to destination: {destination}",
+            file=sys.stderr,
+        )
         return PUBLISH_FAILURE
     return SUCCESS
 

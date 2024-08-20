@@ -5,6 +5,7 @@ from publish.signature import SignatureTypes
 from publish.publish import PublishTypes, publish, ChecksumTypes
 from publish.publish_container import get_image
 from publish.utils.io import exists
+from publish.cli.common import error_print
 from publish.cli.return_codes import (
     SUCCESS,
     FILE_NOT_FOUND,
@@ -104,19 +105,18 @@ def main(args):
     if publish_type == PublishTypes.FILE:
         file_path = os.path.realpath(os.path.expanduser(source))
         if not exists(file_path):
-            print(f"File to publish not found: {file_path}", file=sys.stderr)
+            error_print(f"File to publish not found: {file_path}")
             return FILE_NOT_FOUND
         else:
             source = file_path
 
     if publish_type == PublishTypes.CONTAINER_IMAGE_ARCHIVE and not get_image(source):
-        print(f"Container image to publish not found: {source}", file=sys.stderr)
+        error_print(f"Container image to publish not found: {source}")
         return IMAGE_NOT_FOUND
 
     if with_signature and not signature_key:
-        print(
-            f"Failed to publish source: {source} with signature, no signature key provided. Please provide one via the --signature-key argument.",
-            file=sys.stderr,
+        error_print(
+            f"Failed to publish source: {source} with signature, no signature key provided. Please provide one via the --signature-key argument."
         )
         return PUBLISH_FAILURE
 
@@ -139,9 +139,8 @@ def main(args):
         signauture_args=signature_args,
         verbose=verbose,
     ):
-        print(
-            f"Failed to correctly publish source: {source} to destination: {destination}",
-            file=sys.stderr,
+        error_print(
+            f"Failed to correctly publish source: {source} to destination: {destination}"
         )
         return PUBLISH_FAILURE
     return SUCCESS

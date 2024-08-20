@@ -1,8 +1,9 @@
 import sys
 import os
 import argparse
-from publish.signature import SignatureTypes, sign_file
 from publish.utils.io import exists
+from publish.signature import SignatureTypes, sign_file
+from publish.cli.common import error_print
 from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND, SIGN_FAILURE
 
 SCRIPT_NAME = __file__
@@ -57,7 +58,7 @@ def main(args):
     verbose = parsed_args.verbose
 
     if not exists(file_):
-        print(f"File to sign not found: {file_}", file=sys.stderr)
+        error_print(f"File to sign not found: {file_}")
         return FILE_NOT_FOUND
 
     signed = sign_file(

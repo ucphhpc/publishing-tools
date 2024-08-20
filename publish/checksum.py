@@ -1,5 +1,5 @@
-from enum import StrEnum
 from publish.utils.io import hashsum, write, exists, load
+from publish.common import StrEnum
 
 
 class ChecksumTypes(StrEnum):

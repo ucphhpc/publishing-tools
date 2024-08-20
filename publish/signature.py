@@ -1,6 +1,6 @@
 import os
-from enum import StrEnum
 from publish.utils.job import run
+from publish.common import StrEnum
 
 
 class SignatureTypes(StrEnum):

@@ -1,8 +1,8 @@
-from enum import StrEnum
 from publish.utils.io import exists, copy
 from publish.signature import sign_file, SignatureTypes
 from publish.publish_container import container_publish_to_archive
 from publish.checksum import ChecksumTypes, write_checksum_file
+from publish.common import StrEnum
 
 
 class PublishTypes(StrEnum):

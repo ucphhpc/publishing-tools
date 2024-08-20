@@ -132,12 +132,23 @@ def sign_file(
     output=None,
     verbose=False,
 ):
-    filename = os.path.basename(file_)
     if not output:
-        output = f"{filename}.{sign_command}"
+        filename = os.path.basename(file_)
+        directory = os.path.dirname(file_)
+        output = os.path.join(directory, f"{filename}.{sign_command}")
 
     if not sign_args:
-        sign_args = ["--no-tty", "--batch", "--sign"]
+        # https://www.gnupg.org/documentation/manuals/gnupg24/gpg.1.html
+        # Recommended by gpg to use the --batch, --status-fd, --with-colons flags when another
+        # piece of software is interfacing with gpg.
+        sign_args = [
+            "--no-tty",
+            "--status-fd",
+            "0",
+            "--with-colons",
+            "--batch",
+            "--sign",
+        ]
 
     if verbose:
         print(
@@ -164,7 +175,7 @@ def verify_file(
     file_, key_name, verify_command=SignatureTypes.GPG, verify_args=None, verbose=False
 ):
     """
-    Verify a file with a key using gpg by default.
+    Verify a file with a key using SignatureTypes.GPG by default.
     If the file is successfully verified, return True, otherwise return False.
 
     Note:

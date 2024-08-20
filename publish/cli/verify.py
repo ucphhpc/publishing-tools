@@ -92,10 +92,18 @@ def main(args):
     key = parsed_args.key
     verify_command = parsed_args.verify_command
     verify_args = parsed_args.verify_args
-    verification_file = parsed_args.verification_file
+    if parsed_args.verification_file:
+        verification_file = os.path.realpath(
+            os.path.expanduser(parsed_args.verification_file)
+        )
+    else:
+        verification_file = None
     with_checksum = parsed_args.with_checksum
     checksum_algorithm = parsed_args.checksum_algorithm
-    checksum_file = parsed_args.checksum_file
+    if parsed_args.checksum_file:
+        checksum_file = os.path.realpath(os.path.expanduser(parsed_args.checksum_file))
+    else:
+        checksum_file = None
     verbose = parsed_args.verbose
 
     if not exists(original_file):
@@ -106,7 +114,7 @@ def main(args):
     if not verification_file:
         search_priority = [
             f"{original_file}.{verify_command}",
-            f"{original_file.strip(verify_command)}{verify_command}",
+            f"{original_file.strip(verify_command)}.{verify_command}",
         ]
         for option in search_priority:
             if exists(option):
@@ -155,7 +163,7 @@ def main(args):
         verify_args = verify_args.split()
 
     verified = verify_file(
-        original_file, key, verify_command, verify_args, verbose=verbose
+        verification_file, key, verify_command, verify_args, verbose=verbose
     )
     if not verified:
         return VERIFY_FAILURE

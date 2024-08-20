@@ -10,7 +10,13 @@ from publish.signature import (
 from publish.utils.io import exists, makedirs, remove, write
 from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND, SIGN_FAILURE
 from publish.cli.sign import main
-from tests.common import TMP_TEST_PATH, TEST_CONTENT, TEST_FILE
+from tests.common import (
+    TMP_TEST_PATH,
+    TEST_CONTENT,
+    TEST_FILE,
+    NON_EXISTING_FILE,
+    NON_EXISTING_KEY,
+)
 
 TEST_NAME = os.path.basename(__file__).split(".")[0]
 CURRENT_TEST_DIR = os.path.join(TMP_TEST_PATH, TEST_NAME)
@@ -89,10 +95,7 @@ class TestSignCLI(unittest.TestCase):
         self.assertEqual(return_code, SUCCESS)
 
     def test_file_not_found(self):
-        key = "non_existing_key"
-        file_ = "non_existing_file"
-        return_code = main([file_, key])
-        self.assertEqual(return_code, FILE_NOT_FOUND)
+        self.assertEqual(main([NON_EXISTING_FILE, NON_EXISTING_KEY]), FILE_NOT_FOUND)
 
     def test_sign_failure(self):
         test_sign_file = os.path.join(CURRENT_TEST_DIR, f"{TEST_FILE}-1")
@@ -100,12 +103,11 @@ class TestSignCLI(unittest.TestCase):
         self.assertTrue(exists(test_sign_file))
 
         test_sign_file_output = f"{test_sign_file}.{SignatureTypes.GPG}"
-        key = "non_existing_key"
         self.assertEqual(
             main(
                 [
                     test_sign_file,
-                    key,
+                    NON_EXISTING_KEY,
                     "--signature-args",
                     GPG_SIGN_ARGS,
                     "--output",

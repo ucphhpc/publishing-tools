@@ -92,7 +92,7 @@ def parse_args(args):
 def main(args):
     parsed_args = parse_args(args)
     source = parsed_args.source
-    destination = parsed_args.destination
+    destination = os.path.realpath(os.path.expanduser(parsed_args.destination))
     publish_type = parsed_args.publish_type
     with_checksum = parsed_args.with_checksum
     checksum_algorithm = parsed_args.checksum_algorithm

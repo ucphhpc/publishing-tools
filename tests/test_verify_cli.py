@@ -2,7 +2,7 @@ import os
 import unittest
 
 from publish.utils.io import exists, makedirs, remove, write
-from publish.signature import gen_key, SignatureTypes
+from publish.signature import gen_key, SignatureTypes, sign_file
 from publish.checksum import write_checksum_file, ChecksumTypes
 from publish.cli.return_codes import (
     SUCCESS,
@@ -11,15 +11,17 @@ from publish.cli.return_codes import (
     CHECKSUM_FAILURE,
 )
 from publish.cli.verify import main
-from tests.common import TMP_TEST_PATH, TEST_CONTENT
+from tests.common import (
+    TMP_TEST_PATH,
+    TEST_CONTENT,
+    NON_EXISTING_KEY,
+    NON_EXISTING_FILE,
+)
 
 
 TEST_NAME = os.path.basename(__file__).split(".")[0]
 CURRENT_TEST_DIR = os.path.join(TMP_TEST_PATH, TEST_NAME)
 TEST_KEY_NAME = f"{TEST_NAME}_key"
-
-NON_EXISTING_FILE = "non_existing_file"
-NON_EXISTING_KEY = "non_existing_key"
 
 # GPG settings
 TMP_TEST_GNUPG_DIR = os.path.join(CURRENT_TEST_DIR, ".gnupg")
@@ -61,7 +63,6 @@ class TestVerifyCLI(unittest.TestCase):
             )
             is True
         )
-        assert write(TEST_VERIFY_FILE, TEST_CONTENT) is True
 
     @classmethod
     def tearDownClass(cls):
@@ -77,33 +78,52 @@ class TestVerifyCLI(unittest.TestCase):
         self.assertEqual(return_code, SUCCESS)
 
     def test_file_not_found(self):
-        file_ = NON_EXISTING_FILE
-        key = NON_EXISTING_KEY
-        self.assertEqual(main([file_, key]), FILE_NOT_FOUND)
+        self.assertEqual(main([NON_EXISTING_FILE, NON_EXISTING_KEY]), FILE_NOT_FOUND)
+
+    def test_verification_file_not_found(self):
+        test_verify_file = f"{TEST_VERIFY_FILE}-1"
+        self.assertTrue(write(test_verify_file, TEST_CONTENT))
+        self.assertEqual(
+            main(
+                [
+                    test_verify_file,
+                    NON_EXISTING_KEY,
+                    "--verification-file",
+                    NON_EXISTING_FILE,
+                ]
+            ),
+            FILE_NOT_FOUND,
+        )
 
     def test_verify_failure(self):
-        test_verify_file = os.path.join(CURRENT_TEST_DIR, "{TEST_VERIFY_FILE}-1")
+        test_verify_file = f"{TEST_VERIFY_FILE}-2"
         self.assertTrue(write(test_verify_file, TEST_CONTENT))
-        self.assertTrue(exists(test_verify_file))
+        self.assertTrue(
+            sign_file(test_verify_file, TEST_KEY_NAME, sign_args=GPG_SIGN_ARGS)
+        )
 
-        key = NON_EXISTING_KEY
-        self.assertEqual(main([test_verify_file, key]), VERIFY_FAILURE)
+        self.assertEqual(main([test_verify_file, NON_EXISTING_KEY]), VERIFY_FAILURE)
         self.assertTrue(remove(test_verify_file))
         self.assertFalse(exists(test_verify_file))
 
     def test_verify_success(self):
-        test_verify_file = os.path.join(CURRENT_TEST_DIR, f"{TEST_VERIFY_FILE}-2")
+        test_verify_file = f"{TEST_VERIFY_FILE}-3"
         self.assertTrue(write(test_verify_file, TEST_CONTENT))
-        self.assertTrue(exists(test_verify_file))
+        self.assertTrue(
+            sign_file(test_verify_file, TEST_KEY_NAME, sign_args=GPG_SIGN_ARGS)
+        )
+
         self.assertEqual(
             main([test_verify_file, TEST_KEY_NAME, "--verify-args", GPG_SIGN_ARGS]),
             SUCCESS,
         )
 
     def test_verify_success_with_checksum(self):
-        test_verify_file = os.path.join(CURRENT_TEST_DIR, f"{TEST_VERIFY_FILE}-3")
+        test_verify_file = f"{TEST_VERIFY_FILE}-4"
         self.assertTrue(write(test_verify_file, TEST_CONTENT))
-        self.assertTrue(exists(test_verify_file))
+        self.assertTrue(
+            sign_file(test_verify_file, TEST_KEY_NAME, sign_args=GPG_SIGN_ARGS)
+        )
         self.assertTrue(
             write_checksum_file(test_verify_file, algorithm=ChecksumTypes.SHA256)
         )
@@ -127,13 +147,16 @@ class TestVerifyCLI(unittest.TestCase):
         )
 
     def test_verify_checksum_failure(self):
-        test_verify_file = os.path.join(CURRENT_TEST_DIR, f"{TEST_VERIFY_FILE}-4")
+        test_verify_file = f"{TEST_VERIFY_FILE}-5"
         self.assertTrue(write(test_verify_file, TEST_CONTENT))
-        self.assertTrue(exists(test_verify_file))
+        self.assertTrue(
+            sign_file(test_verify_file, TEST_KEY_NAME, sign_args=GPG_SIGN_ARGS)
+        )
         self.assertTrue(
             write_checksum_file(test_verify_file, algorithm=ChecksumTypes.MD5)
         )
         checksum_file = f"{test_verify_file}.{ChecksumTypes.MD5}"
+
         self.assertEqual(
             main(
                 [

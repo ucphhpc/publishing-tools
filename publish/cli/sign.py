@@ -52,7 +52,10 @@ def main(args):
     parsed_args = parse_args(args)
     file_ = os.path.realpath(os.path.expanduser(parsed_args.file))
     key = parsed_args.key
-    output = parsed_args.output
+    if parsed_args.output:
+        output = os.path.realpath(os.path.expanduser(parsed_args.output))
+    else:
+        output = None
     signature_generator = parsed_args.signature_generator
     signature_args = parsed_args.signature_args
     verbose = parsed_args.verbose

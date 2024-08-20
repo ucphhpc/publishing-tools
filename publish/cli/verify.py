@@ -21,11 +21,12 @@ def parse_args(args):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "original_file",
-        help="Path to the original file to verify.",
+        "file",
+        help="Path to the file to verify.",
     )
     parser.add_argument(
-        "key", help="Path to the key to verify the verification_file with"
+        "key",
+        help="The key that the --verify-command should use to verify the file with.",
     )
     parser.add_argument(
         "--verify-command",
@@ -44,12 +45,6 @@ def parse_args(args):
         help="Additional arguments to pass to the verify command.",
     )
     parser.add_argument(
-        "--verification-file",
-        "-vf",
-        default=None,
-        help="Path to the verification file to verify against.",
-    )
-    parser.add_argument(
         "--with-checksum",
         "-wc",
         action="store_true",
@@ -57,12 +52,20 @@ def parse_args(args):
         help="Whether to also verify a checksum file.",
     )
     parser.add_argument(
-        "--checksum-file",
-        "-cf",
+        "--checksum-digest-file",
+        "-cdf",
         default=None,
         help="""
-        Path to the checksum file to verify against when --with-checksum is enabled.
-        If none is provided, the checksum file will be assumed to be in the same directory as the file to verify with the same name and the checksum file extension.
+        Path to the file that contains the digest to validate against when --with-checksum is enabled.
+        If none is provided, the checksum file will be assumed to be in the same directory as the verify file with the same base name and the selected --checksum-algorithm extension.
+        """,
+    )
+    parser.add_argument(
+        "--checksum-original-file",
+        "-cof",
+        default=None,
+        help="""
+        Path to the file to validate the --checksum-digest-file content against when --with-checksum is enabled.
         """,
     )
     parser.add_argument(
@@ -86,75 +89,79 @@ def parse_args(args):
     return parser.parse_args(args=args)
 
 
+def search_for_file(path, search_priorities, verbose=False):
+    for option in search_priorities:
+        if exists(option):
+            return option
+    return None
+
+
 def main(args):
     parsed_args = parse_args(args)
-    original_file = os.path.realpath(os.path.expanduser(parsed_args.original_file))
+    file_ = os.path.realpath(os.path.expanduser(parsed_args.file))
     key = parsed_args.key
     verify_command = parsed_args.verify_command
     verify_args = parsed_args.verify_args
-    if parsed_args.verification_file:
-        verification_file = os.path.realpath(
-            os.path.expanduser(parsed_args.verification_file)
-        )
-    else:
-        verification_file = None
     with_checksum = parsed_args.with_checksum
     checksum_algorithm = parsed_args.checksum_algorithm
-    if parsed_args.checksum_file:
-        checksum_file = os.path.realpath(os.path.expanduser(parsed_args.checksum_file))
+    if parsed_args.checksum_digest_file:
+        checksum_digest_file = os.path.realpath(
+            os.path.expanduser(parsed_args.checksum_digest_file)
+        )
     else:
-        checksum_file = None
+        checksum_digest_file = None
+    if parsed_args.checksum_original_file:
+        checksum_original_file = os.path.realpath(
+            os.path.expanduser(parsed_args.checksum_original_file)
+        )
+    else:
+        checksum_original_file = None
     verbose = parsed_args.verbose
 
-    if not exists(original_file):
-        error_print(f"The original file to verify was not found: {original_file}")
-        return FILE_NOT_FOUND
-
-    found_verification_file = False
-    if not verification_file:
-        search_priority = [
-            f"{original_file}.{verify_command}",
-            f"{original_file.strip(verify_command)}.{verify_command}",
-        ]
-        for option in search_priority:
-            if exists(option):
-                found_verification_file = True
-                verification_file = option
-                break
-
-    if not found_verification_file:
-        error_print(
-            f"Failed to find a verification file to validate against for file: {original_file}",
-        )
+    if not exists(file_):
+        error_print(f"The file to verify was not found: {file_}")
         return FILE_NOT_FOUND
 
     if with_checksum:
-        if not checksum_file:
-            # Try to discover the checksum file in the same directory as the file to verify
+        if not checksum_original_file:
+            # Try to discover the original file in the same directory as the file to verify
+            # since the user did not provide one.
+            search_priorities = [
+                file_.strip(f".{verify_command}"),
+            ]
+            checksum_original_file = search_for_file(
+                file_, search_priorities, verbose=verbose
+            )
+            if not checksum_original_file or not exists(checksum_original_file):
+                error_print(
+                    "No original file provided to validate the checksum digest against."
+                )
+                return FILE_NOT_FOUND
+
+        if not checksum_digest_file:
+            # Try to discover the checksum digest file in the same directory as the file to verify
             # since the user did not provide one.
             if verbose:
-                print("Checksum file not provided, searching for one.")
+                print(
+                    "The Checksum digest file has not been set by the user, attempting to search for one."
+                )
             search_priority = [
-                f"{original_file}.{checksum_algorithm}",
-                f"{original_file.strip(verify_command)}{checksum_algorithm}",
+                f"{checksum_original_file}.{checksum_algorithm}",
+                f"{file_}.{checksum_algorithm}",
             ]
-            found_checksum_file = False
-            for option in search_priority:
-                if verbose:
-                    print(f"Checking if a checksum file located at: {option} exists.")
-                if exists(option):
-                    found_checksum_file = True
-                    checksum_file = option
-                    break
-
-            if not found_checksum_file:
-                error_print("Failed to find a checksum file to validate against.")
+            checksum_digest_file = search_for_file(
+                file_, search_priority, verbose=verbose
+            )
+            if not checksum_digest_file or not exists(checksum_digest_file):
+                error_print(
+                    "Failed to find a checksum digest file to validate against."
+                )
                 return FILE_NOT_FOUND
         if not checksum_equal(
-            original_file, checksum_file, algorithm=checksum_algorithm
+            checksum_original_file, checksum_digest_file, algorithm=checksum_algorithm
         ):
             error_print(
-                f"Checksum verification failed for file: {original_file} with checksum file: {checksum_file}"
+                f"Checksum verification failed for file: {checksum_original_file} with checksum file: {checksum_digest_file}"
             )
             return CHECKSUM_FAILURE
 
@@ -162,9 +169,7 @@ def main(args):
         # The underlying API expects a list of arguments
         verify_args = verify_args.split()
 
-    verified = verify_file(
-        verification_file, key, verify_command, verify_args, verbose=verbose
-    )
+    verified = verify_file(file_, key, verify_command, verify_args, verbose=verbose)
     if not verified:
         return VERIFY_FAILURE
     return SUCCESS

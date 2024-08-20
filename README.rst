@@ -25,6 +25,8 @@ The package provides a set of complementary tools that can be used as part of pu
 In particular, the package can help with optimizing the workflow for signing, checksumming, and verifying the integrity of artifacts to be published.
 The package provides the ``publish``, ``sign``, and ``verify`` tools:
 
+
+
 The overall ``publish`` tool can be used to publish a source to a destination, optionally with an associated checksum and/or signature file.
 The ``publish`` tool currently supports two types of ``sources``, i.e. either a file or (`Podman <https://docs.podman.io/en/latest/>`_) container image.
 The selection can be controlled via the ``--publish-type`` argument that specifies what type of source should be published.
@@ -46,7 +48,7 @@ The selection can be controlled via the ``--publish-type`` argument that specifi
 
         positional arguments:
         source                The source input to publish.
-        destination           Path to the destination to publish to.
+        destination           Path to the destination to publish to, can be either a directory .
 
         options:
         -h, --help            show this help message and exit
@@ -61,7 +63,7 @@ The selection can be controlled via the ``--publish-type`` argument that specifi
         --signature-key SIGNATURE_KEY, -sk SIGNATURE_KEY
                                 Which key should be used to sign with when --with-signature is enabled. (default: None)
         --signature-args SIGNATURE_ARGS, -sa SIGNATURE_ARGS
-                                Optional arguments to give the selected --signature-generator. (default: --sign)
+                                Optional arguments to give the selected --signature-generator. (default: --sign --batch)
         --verbose, -v         Flag to enable verbose output. (default: False)
 
 After a source has been published with a checksum and/or signature, the ``verify`` tool can be used to verify the integrity of the source.
@@ -74,15 +76,16 @@ Information for how this tool can be used can be discovered via the normal `--he
         [--verify-command {gpg}]
         [--verify-args VERIFY_ARGS]
         [--with-checksum]
-        [--checksum-file CHECKSUM_FILE]
+        [--checksum-digest-file CHECKSUM_DIGEST_FILE]
+        [--checksum-original-file CHECKSUM_ORIGINAL_FILE]
         [--checksum-algorithm {sha256,sha512,md5}]
         [--verbose]
         file
         key
 
         positional arguments:
-        file                  Path to the file to verify
-        key                   Path to the key to verify the file with
+        file                  Path to the file to verify.
+        key                   The key that the --verify-command should use to verify the file with.
 
         options:
         -h, --help            show this help message and exit
@@ -91,14 +94,14 @@ Information for how this tool can be used can be discovered via the normal `--he
         --verify-args VERIFY_ARGS, -va VERIFY_ARGS
                                 Additional arguments to pass to the verify command. (default: --verify --batch --status-fd 0 --with-colons)
         --with-checksum, -wc  Whether to also verify a checksum file. (default: False)
-        --checksum-file CHECKSUM_FILE, -cf CHECKSUM_FILE
-                                Path to the checksum file to verify against when --with-checksum is enabled.
-                                If none is provided, the checksum file will be assumed to be in the same directory as the file to verify
-                                with the same name and the checksum file extension. (default: None)
+        --checksum-digest-file CHECKSUM_DIGEST_FILE, -cdf CHECKSUM_DIGEST_FILE
+                                Path to the file that contains the digest to validate against when --with-checksum is enabled. If none is provided, the checksum file will be assumed to be in the same directory as
+                                the verify file with the same base name and the selected --checksum-algorithm extension. (default: None)
+        --checksum-original-file CHECKSUM_ORIGINAL_FILE, -cof CHECKSUM_ORIGINAL_FILE
+                                Path to the file to validate the --checksum-digest-file content against when --with-checksum is enabled. (default: None)
         --checksum-algorithm {sha256,sha512,md5}, -ca {sha256,sha512,md5}
                                 Which checksum algorithm to use for verification when --with-checksum is enabled. (default: sha256)
         --verbose, -v         Flag to enable verbose output. (default: False)
-
 
 --------
 Examples
@@ -155,16 +158,34 @@ and finally a version of the archived file that has been signed in the destinati
     container_image.tar.sha256
 
 
-Verifing a publication
-----------------------
+Verifing a file publication
+---------------------------
 
-To verify a signed publication, the ``verify`` tool can be used.
-The tool expects the path to the file to verify and the path to the signature key to verify the file with.
-Furthermore, the ``--with-checksum`` flag should be set if a checksum file is also available that should be validated as part of the verification.
+To verify a signed file publication, the ``verify`` tool can be used.
+The tool expects a path to the file that should be verified and a valid key that should be used to verify the file via the selected ``--verify-command``.
+Currently the tool only supports GPG as the verification command, but this can be extended in the future.
+In addition to signature verification, the tool can also verify a checksum file if the ``--with-checksum`` flag is set.
+When this flag is set, the tool requires that both the signature and checksum checks will pass for the verification to be successful.
 
+An example of a simple verification of a signed file with an associated checksum file can be seen below:
 
 .. code-block:: bash
 
-    $ verify --with-checksum /tmp/hello_published.txt <key_id_or_name> /tmp/hello_published.txt.gpg
+    $ verify --with-checksum /tmp/hello_published.txt.gpg <key_id_or_name>
 
+With this command, the verify tool will automatically try to discover the checksum digest file and the original published file in the same directory as the file to verify.
+If the expected files are not present in the same directory, then the ``--checksum-digest-file``/``--checksum-original-file`` arguments can be used to specify the paths to the required files.
 
+The result of the verification will be a message that indicates if the verification was successful or not.
+
+Verifying a container image publication
+---------------------------------------
+
+Similarly to the file verification, the container image verification can be done with the ``verify`` tool.
+After a container image achive has been published, the verification can be done with the following command:
+
+.. code-block:: bash
+
+    $ verify --with-checksum /tmp/container_image.tar.gpg <key_id_or_name>
+
+The expectations for the verification are the same as for the file verification, i.e. that the signature and checksum checks will pass for the verification to be successful.

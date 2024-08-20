@@ -46,6 +46,10 @@ GPG_SIGN_ARGS = GPG_COMMON_ARGS + [
     "--passphrase",
     "",
 ]
+GPG_VERIFY_ARGS = GPG_COMMON_ARGS + [
+    "--with-colons",
+    "--verify",
+]
 TEST_VERIFY_FILE = os.path.join(CURRENT_TEST_DIR, "test_verify_file")
 
 
@@ -80,21 +84,6 @@ class TestVerifyCLI(unittest.TestCase):
     def test_file_not_found(self):
         self.assertEqual(main([NON_EXISTING_FILE, NON_EXISTING_KEY]), FILE_NOT_FOUND)
 
-    def test_verification_file_not_found(self):
-        test_verify_file = f"{TEST_VERIFY_FILE}-1"
-        self.assertTrue(write(test_verify_file, TEST_CONTENT))
-        self.assertEqual(
-            main(
-                [
-                    test_verify_file,
-                    NON_EXISTING_KEY,
-                    "--verification-file",
-                    NON_EXISTING_FILE,
-                ]
-            ),
-            FILE_NOT_FOUND,
-        )
-
     def test_verify_failure(self):
         test_verify_file = f"{TEST_VERIFY_FILE}-2"
         self.assertTrue(write(test_verify_file, TEST_CONTENT))
@@ -112,9 +101,11 @@ class TestVerifyCLI(unittest.TestCase):
         self.assertTrue(
             sign_file(test_verify_file, TEST_KEY_NAME, sign_args=GPG_SIGN_ARGS)
         )
+        test_signed_file = f"{test_verify_file}.{SignatureTypes.GPG}"
+        self.assertTrue(exists(test_signed_file))
 
         self.assertEqual(
-            main([test_verify_file, TEST_KEY_NAME, "--verify-args", GPG_SIGN_ARGS]),
+            main([test_signed_file, TEST_KEY_NAME, "--verify-args", GPG_VERIFY_ARGS]),
             SUCCESS,
         )
 
@@ -129,15 +120,19 @@ class TestVerifyCLI(unittest.TestCase):
         )
         checksum_file = f"{test_verify_file}.{ChecksumTypes.SHA256}"
         self.assertTrue(exists(checksum_file))
+
+        test_signed_file = f"{test_verify_file}.{SignatureTypes.GPG}"
+        self.assertTrue(exists(test_signed_file))
+
         self.assertEqual(
             main(
                 [
-                    test_verify_file,
+                    test_signed_file,
                     TEST_KEY_NAME,
                     "--verify-args",
-                    GPG_SIGN_ARGS,
+                    GPG_VERIFY_ARGS,
                     "--with-checksum",
-                    "--checksum-file",
+                    "--checksum-digest-file",
                     checksum_file,
                     "--checksum-algorithm",
                     ChecksumTypes.SHA256,
@@ -156,6 +151,10 @@ class TestVerifyCLI(unittest.TestCase):
             write_checksum_file(test_verify_file, algorithm=ChecksumTypes.MD5)
         )
         checksum_file = f"{test_verify_file}.{ChecksumTypes.MD5}"
+        self.assertTrue(exists(checksum_file))
+
+        test_signed_file = f"{test_verify_file}.{SignatureTypes.GPG}"
+        self.assertTrue(exists(test_signed_file))
 
         self.assertEqual(
             main(
@@ -163,9 +162,9 @@ class TestVerifyCLI(unittest.TestCase):
                     test_verify_file,
                     TEST_KEY_NAME,
                     "--verify-args",
-                    GPG_SIGN_ARGS,
+                    GPG_VERIFY_ARGS,
                     "--with-checksum",
-                    "--checksum-file",
+                    "--checksum-digest-file",
                     checksum_file,
                     "--checksum-algorithm",
                     ChecksumTypes.SHA256,

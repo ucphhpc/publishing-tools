@@ -86,8 +86,8 @@ def remove_image(name_or_id, container_client_kwargs=None, verbose=False):
     return False
 
 
-def exists_image(image_id):
-    with PodmanClient() as client:
+def exists_image(image_id, container_client_kwargs=None):
+    with PodmanClient(**container_client_kwargs) as client:
         return client.images.exists(image_id)
 
 

@@ -28,8 +28,8 @@ def parse_args(args):
     parser.add_argument(
         "--signature-generator",
         "-sg",
-        default=SignatureTypes.GPG,
-        choices=[SignatureTypes.GPG],
+        default=SignatureTypes.GPG.value,
+        choices=[SignatureTypes.GPG.value],
         help="Which signaturer to use to sign the file.",
     )
     parser.add_argument(

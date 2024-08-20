@@ -32,8 +32,8 @@ def parse_args(args):
     parser.add_argument(
         "--publish-type",
         "-pt",
-        default=PublishTypes.FILE,
-        choices=[PublishTypes.FILE, PublishTypes.CONTAINER_IMAGE_ARCHIVE],
+        default=PublishTypes.FILE.value,
+        choices=[PublishTypes.FILE.value, PublishTypes.CONTAINER_IMAGE_ARCHIVE.value],
     )
     parser.add_argument(
         "--with-checksum",
@@ -45,11 +45,11 @@ def parse_args(args):
     parser.add_argument(
         "--checksum-algorithm",
         "-ca",
-        default=ChecksumTypes.SHA256,
+        default=ChecksumTypes.SHA256.value,
         choices=[
-            ChecksumTypes.SHA256,
-            ChecksumTypes.SHA512,
-            ChecksumTypes.MD5,
+            ChecksumTypes.SHA256.value,
+            ChecksumTypes.SHA512.value,
+            ChecksumTypes.MD5.value,
         ],
         help="Which checksum algorithm to use when --with-checksum is enabled.",
     )
@@ -63,8 +63,8 @@ def parse_args(args):
     parser.add_argument(
         "--signature-generator",
         "-sg",
-        default=SignatureTypes.GPG,
-        choices=[SignatureTypes.GPG],
+        default=SignatureTypes.GPG.value,
+        choices=[SignatureTypes.GPG.value],
         help="Which signaturer to use when --with-signature is enabled.",
     )
     parser.add_argument(

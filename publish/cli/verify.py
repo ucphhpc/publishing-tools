@@ -31,8 +31,8 @@ def parse_args(args):
     parser.add_argument(
         "--verify-command",
         "-vc",
-        default=SignatureTypes.GPG,
-        choices=[SignatureTypes.GPG],
+        default=SignatureTypes.GPG.value,
+        choices=[SignatureTypes.GPG.value],
         help="Command to verify the file with. Default is 'gpg'.",
     )
     # https://www.gnupg.org/documentation/manuals/gnupg24/gpg.1.html
@@ -71,11 +71,11 @@ def parse_args(args):
     parser.add_argument(
         "--checksum-algorithm",
         "-ca",
-        default=ChecksumTypes.SHA256,
+        default=ChecksumTypes.SHA256.value,
         choices=[
-            ChecksumTypes.SHA256,
-            ChecksumTypes.SHA512,
-            ChecksumTypes.MD5,
+            ChecksumTypes.SHA256.value,
+            ChecksumTypes.SHA512.value,
+            ChecksumTypes.MD5.value,
         ],
         help="Which checksum algorithm to use for verification when --with-checksum is enabled.",
     )

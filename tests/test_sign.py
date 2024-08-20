@@ -9,7 +9,7 @@ from publish.signature import (
     SignatureTypes,
 )
 from publish.utils.io import makedirs, exists, remove, write
-from tests.common import TMP_TEST_PATH
+from tests.common import TMP_TEST_PATH, TEST_FILE, TEST_CONTENT, NON_EXISTING_FILE
 
 TEST_NAME = os.path.basename(__file__).split(".")[0]
 CURRENT_TEST_DIR = os.path.join(TMP_TEST_PATH, TEST_NAME)
@@ -41,9 +41,6 @@ GPG_DELETE_ARGS = GPG_SIGN_COMMON_ARGS + [
     "--delete-secret-and-public-key",
     "--yes",
 ]
-
-TEST_SIGN_FILE = "test_sign_file"
-TEST_FILE_CONTENT = "sfopawmdioamwioac aoimaw aw 2414 14"
 
 
 class TestGpGSignFile(unittest.TestCase):
@@ -108,8 +105,8 @@ class TestGpGSignFile(unittest.TestCase):
 
     def test_sign_success(self):
         # Create a temporary file to sign
-        test_file_path = os.path.join(CURRENT_TEST_DIR, TEST_SIGN_FILE)
-        self.assertTrue(write(test_file_path, TEST_FILE_CONTENT))
+        test_file_path = os.path.join(CURRENT_TEST_DIR, f"{TEST_FILE}-1")
+        self.assertTrue(write(test_file_path, TEST_CONTENT))
         self.assertTrue(exists(test_file_path))
 
         test_signed_file_ouput = f"{test_file_path}.{SignatureTypes.GPG}"
@@ -129,7 +126,7 @@ class TestGpGSignFile(unittest.TestCase):
 
     def test_sign_nonexisting_file_failure(self):
         # Sign a non-existent file
-        non_existing_file = os.path.join(CURRENT_TEST_DIR, "non_existent_file")
+        non_existing_file = os.path.join(CURRENT_TEST_DIR, NON_EXISTING_FILE)
         self.assertFalse(exists(non_existing_file))
         self.assertFalse(
             sign_file(

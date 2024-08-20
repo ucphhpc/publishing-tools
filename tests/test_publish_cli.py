@@ -12,21 +12,21 @@ from tests.common import (
     TESTS_DOCKERFILE,
     LOCAL_OWNER,
     LOCAL_REGISTRY,
+    NON_EXISTING_FILE,
+    NON_EXISTING_IMAGE,
+    NON_EXISTING_DESTINATION,
+    ARCHIVE_EXTENSION,
+    TEST_CONTENT,
 )
 
 TEST_NAME = os.path.basename(__file__).split(".")[0]
 CURRENT_TEST_DIR = os.path.join(TMP_TEST_PATH, TEST_NAME)
-NON_EXISTING_FILE = "non_existing_file"
-NON_EXISTING_IMAGE = "non_existing_image"
-NON_EXISTING_DESTINATION = "non_existing_destination"
 
 # Publish settings
 TEST_PUBLISH_FILE = f"{TEST_NAME}_file"
 TEST_PUBLISH_DESTINATION = f"{TEST_NAME}_destination"
 TEST_PUBLISH_DIRECTORY = os.path.join(CURRENT_TEST_DIR, TEST_PUBLISH_DESTINATION)
 TEST_PUBLISH_INPUT = os.path.join(TEST_PUBLISH_DIRECTORY, TEST_PUBLISH_FILE)
-TEST_PUBLISH_CONTENT = "foo bar"
-ARCHIVE_EXTENSION = "tar"
 
 # Publish image settings
 TEST_PUBLISH_CONTAINER_IMAGE = f"{TEST_NAME}_container_image"
@@ -70,7 +70,7 @@ class TestPublishCLI(unittest.TestCase):
             assert makedirs(CURRENT_TEST_DIR) is True
         if not exists(TEST_PUBLISH_DIRECTORY):
             assert makedirs(TEST_PUBLISH_DIRECTORY) is True
-        assert write(TEST_PUBLISH_INPUT, TEST_PUBLISH_CONTENT)
+        assert write(TEST_PUBLISH_INPUT, TEST_CONTENT)
         assert exists(TEST_PUBLISH_INPUT)
         assert (
             build_image(

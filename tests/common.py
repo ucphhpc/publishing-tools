@@ -9,5 +9,10 @@ TESTS_DOCKERFILE = os.path.join(TESTS_RESOURCES_DIR, "Dockerfile")
 LOCAL_REGISTRY = "localhost"
 LOCAL_OWNER = "test"
 
-# Test settings
-TEST_CONTENT = "foo bar baz"
+# Various test settings
+ARCHIVE_EXTENSION = "tar"
+NON_EXISTING_FILE = "non_existing_file"
+NON_EXISTING_IMAGE = "non_existing_image"
+NON_EXISTING_DESTINATION = "non_existing_destination"
+TEST_FILE = "test_file"
+TEST_CONTENT = "sfopawmdioamwioac aoimaw aw 2414 14 foobar"

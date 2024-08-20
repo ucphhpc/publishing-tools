@@ -10,7 +10,7 @@ from publish.signature import (
 from publish.utils.io import exists, makedirs, remove, write
 from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND, SIGN_FAILURE
 from publish.cli.sign import main
-from tests.common import TMP_TEST_PATH
+from tests.common import TMP_TEST_PATH, TEST_CONTENT, TEST_FILE
 
 TEST_NAME = os.path.basename(__file__).split(".")[0]
 CURRENT_TEST_DIR = os.path.join(TMP_TEST_PATH, TEST_NAME)
@@ -95,9 +95,8 @@ class TestSignCLI(unittest.TestCase):
         self.assertEqual(return_code, FILE_NOT_FOUND)
 
     def test_sign_failure(self):
-        test_sign_file = os.path.join(CURRENT_TEST_DIR, "test_sign_failure_file")
-        test_sign_file_content = "foo bar"
-        self.assertTrue(write(test_sign_file, test_sign_file_content))
+        test_sign_file = os.path.join(CURRENT_TEST_DIR, f"{TEST_FILE}-1")
+        self.assertTrue(write(test_sign_file, TEST_CONTENT))
         self.assertTrue(exists(test_sign_file))
 
         test_sign_file_output = f"{test_sign_file}.{SignatureTypes.GPG}"
@@ -117,9 +116,8 @@ class TestSignCLI(unittest.TestCase):
         )
 
     def test_sign_success(self):
-        test_sign_file = os.path.join(CURRENT_TEST_DIR, "test_sign_success_file")
-        test_sign_file_content = "adm0ad9am d0a9m2doim"
-        self.assertTrue(write(test_sign_file, test_sign_file_content))
+        test_sign_file = os.path.join(CURRENT_TEST_DIR, f"{TEST_FILE}-2")
+        self.assertTrue(write(test_sign_file, TEST_CONTENT))
         self.assertTrue(exists(test_sign_file))
 
         test_sign_file_output = f"{test_sign_file}.{SignatureTypes.GPG}"

@@ -7,7 +7,7 @@ publishing-tools
 .. image:: https://badge.fury.io/py/publishing-tools.svg
     :target: https://badge.fury.io/py/publishing-tools
 
-A set of tools that can be used for publishing packages and container images.
+A set of tools that can be used for optimizing publishing files and container archive releases.
 
 ------------
 Installation

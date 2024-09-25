@@ -137,3 +137,26 @@ class TestSignCLI(unittest.TestCase):
             SUCCESS,
         )
         self.assertTrue(exists(f"{test_sign_file}.{SignatureTypes.GPG}"))
+
+    def test_sign_remove_original(self):
+        test_sign_file = os.path.join(CURRENT_TEST_DIR, f"{TEST_FILE}-3")
+        self.assertTrue(write(test_sign_file, TEST_CONTENT))
+        self.assertTrue(exists(test_sign_file))
+
+        test_sign_file_output = f"{test_sign_file}.{SignatureTypes.GPG}"
+        self.assertEqual(
+            main(
+                [
+                    test_sign_file,
+                    TEST_KEY_NAME,
+                    "--signature-args",
+                    GPG_SIGN_ARGS,
+                    "--output",
+                    test_sign_file_output,
+                    "--remove-original",
+                ]
+            ),
+            SUCCESS,
+        )
+        self.assertFalse(exists(test_sign_file))
+        self.assertTrue(exists(test_sign_file_output))

@@ -1,7 +1,7 @@
 import sys
 import os
 import argparse
-from publish.utils.io import exists
+from publish.utils.io import exists, remove
 from publish.signature import SignatureTypes, sign_file
 from publish.cli.common import error_print
 from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND, SIGN_FAILURE
@@ -24,6 +24,13 @@ def parse_args(args):
         "-o",
         default=None,
         help="Path to the output file. Default is None, which will output to the FILE path with the --sign-command extension.",
+    )
+    parser.add_argument(
+        "--remove-original",
+        "-ro",
+        action="store_true",
+        default=False,
+        help="Flag to remove the original file after signing.",
     )
     parser.add_argument(
         "--signature-generator",
@@ -56,6 +63,7 @@ def main(args):
         output = os.path.realpath(os.path.expanduser(parsed_args.output))
     else:
         output = None
+    remove_original = parsed_args.remove_original
     signature_generator = parsed_args.signature_generator
     signature_args = parsed_args.signature_args
     verbose = parsed_args.verbose
@@ -84,6 +92,12 @@ def main(args):
     if not signed:
         error_print(f"Failed to sign file: {file_}")
         return SIGN_FAILURE
+    if remove_original:
+        if verbose:
+            print(f"Removing original file: {file_}")
+        if not remove(file_):
+            error_print(f"Failed to remove original file: {file_}")
+            return SIGN_FAILURE
     return SUCCESS
 
 

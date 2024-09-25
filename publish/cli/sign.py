@@ -35,7 +35,7 @@ def parse_args(args):
     parser.add_argument(
         "--signature-args",
         "-sa",
-        default="--sign",
+        default="--sign --batch",
         help="Optional arguments to give the selected --signature-generator.",
     )
     parser.add_argument(
@@ -64,6 +64,15 @@ def main(args):
         error_print(f"File to sign not found: {file_}")
         return FILE_NOT_FOUND
 
+    if isinstance(signature_args, str):
+        # The underlying API expects a list of arguments
+        signature_args = signature_args.split()
+
+    if verbose:
+        print(
+            f"Signing file: {file_} with key: {key} using signature generator: {signature_generator} with arguments: {signature_args}"
+        )
+
     signed = sign_file(
         file_,
         key,
@@ -73,6 +82,7 @@ def main(args):
         verbose=verbose,
     )
     if not signed:
+        error_print(f"Failed to sign file: {file_}")
         return SIGN_FAILURE
     return SUCCESS
 

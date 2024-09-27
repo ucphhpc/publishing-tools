@@ -46,6 +46,7 @@ GPG_SIGN_ARGS = GPG_COMMON_ARGS + [
     "--passphrase",
     "",
 ]
+GPG_DETACH_SIGN_ARGS = GPG_COMMON_ARGS + ["--detach-sign", "--passphrase", ""]
 GPG_VERIFY_ARGS = GPG_COMMON_ARGS + [
     "--with-colons",
     "--verify",
@@ -176,3 +177,76 @@ class TestVerifyCLI(unittest.TestCase):
         self.assertFalse(exists(test_verify_file))
         self.assertTrue(remove(checksum_file))
         self.assertFalse(exists(checksum_file))
+
+    def test_verify_additional_files_with_detach_signature(self):
+        test_verify_file = f"{TEST_VERIFY_FILE}-6"
+        test_signed_file = f"{test_verify_file}.{SignatureTypes.GPG}"
+        self.assertTrue(write(test_verify_file, TEST_CONTENT))
+        self.assertTrue(
+            sign_file(
+                test_verify_file,
+                TEST_KEY_NAME,
+                sign_command=SignatureTypes.GPG,
+                sign_args=GPG_DETACH_SIGN_ARGS,
+                output=test_signed_file,
+            )
+        )
+        self.assertTrue(exists(test_verify_file))
+        self.assertTrue(exists(test_signed_file))
+
+        self.assertEqual(
+            main(
+                [
+                    test_signed_file,
+                    TEST_KEY_NAME,
+                    "--verify-args",
+                    GPG_VERIFY_ARGS,
+                    "--verify-with-additional-files",
+                    test_verify_file,
+                ]
+            ),
+            SUCCESS,
+        )
+        self.assertTrue(remove(test_verify_file))
+        self.assertFalse(exists(test_verify_file))
+        self.assertTrue(remove(test_signed_file))
+        self.assertFalse(exists(test_signed_file))
+
+    def test_verify_additional_files_with_detached_signature_with_checksum(self):
+        test_verify_file = f"{TEST_VERIFY_FILE}-7"
+        test_signed_file = f"{test_verify_file}.{SignatureTypes.GPG}"
+        self.assertTrue(write(test_verify_file, TEST_CONTENT))
+        self.assertTrue(
+            sign_file(
+                test_verify_file,
+                TEST_KEY_NAME,
+                sign_command=SignatureTypes.GPG,
+                sign_args=GPG_DETACH_SIGN_ARGS,
+                output=test_signed_file,
+            )
+        )
+        self.assertTrue(exists(test_verify_file))
+        self.assertTrue(exists(test_signed_file))
+
+        self.assertEqual(
+            main(
+                [
+                    test_signed_file,
+                    TEST_KEY_NAME,
+                    "--verify-args",
+                    GPG_VERIFY_ARGS,
+                    "--verify-with-additional-files",
+                    test_verify_file,
+                    "--with-checksum",
+                    "--checksum-digest-file",
+                    checksum_file,
+                    "--checksum-algorithm",
+                    ChecksumTypes.SHA256,
+                ]
+            ),
+            SUCCESS,
+        )
+        self.assertTrue(remove(test_verify_file))
+        self.assertFalse(exists(test_verify_file))
+        self.assertTrue(remove(test_signed_file))
+        self.assertFalse(exists(test_signed_file))

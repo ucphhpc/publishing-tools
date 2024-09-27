@@ -1,3 +1,4 @@
+import os
 from podman import PodmanClient
 from podman.domain.images import Image
 from podman.errors import ImageNotFound, APIError, BuildError
@@ -101,3 +102,10 @@ def get_image(image_name_or_id, container_client_kwargs=None):
         except ImageNotFound:
             return None
     return None
+
+
+# def podman_client(container_client_kwargs=None, verbose=False):
+#     if "XDG_RUNTIME_DIR" not in os.environ:
+#         if verbose:
+#             print("XDG_RUNTIME_DIR is not set. Podman client may not work as expected. Suggesting that it be set to a user available runtime directory such as /run/user/<user_id>")
+#     return PodmanClient(**container_client_kwargs)

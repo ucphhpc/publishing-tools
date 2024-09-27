@@ -29,6 +29,13 @@ def parse_args(args):
         help="The key that the --verify-command should use to verify the file with.",
     )
     parser.add_argument(
+        "--verify-with-additional-files",
+        "-vwaf",
+        nargs="+",
+        default=[],
+        help="Additional files to verify with the key. This is useful when verifying a detached signature.",
+    )
+    parser.add_argument(
         "--verify-command",
         "-vc",
         default=SignatureTypes.GPG.value,
@@ -100,6 +107,9 @@ def main(args):
     parsed_args = parse_args(args)
     file_ = os.path.realpath(os.path.expanduser(parsed_args.file))
     key = parsed_args.key
+    verify_additional_files = [
+        os.path.expanduser(path) for path in parsed_args.verify_with_additional_files
+    ]
     verify_command = parsed_args.verify_command
     verify_args = parsed_args.verify_args
     with_checksum = parsed_args.with_checksum
@@ -121,6 +131,14 @@ def main(args):
     if not exists(file_):
         error_print(f"The file to verify was not found: {file_}")
         return FILE_NOT_FOUND
+
+    if verify_additional_files:
+        for additional_file in verify_additional_files:
+            if not exists(additional_file):
+                error_print(
+                    f"Additional file to use for verification is not found: {additional_file}"
+                )
+                return FILE_NOT_FOUND
 
     if with_checksum:
         if not checksum_original_file:
@@ -169,7 +187,14 @@ def main(args):
         # The underlying API expects a list of arguments
         verify_args = verify_args.split()
 
-    verified = verify_file(file_, key, verify_command, verify_args, verbose=verbose)
+    verified = verify_file(
+        file_,
+        key,
+        verify_command,
+        verify_args,
+        verify_additional_files=verify_additional_files,
+        verbose=verbose,
+    )
     if not verified:
         return VERIFY_FAILURE
     return SUCCESS

@@ -172,7 +172,12 @@ def sign_file(
 
 
 def verify_file(
-    file_, key_name, verify_command=SignatureTypes.GPG, verify_args=None, verbose=False
+    file_,
+    key_name,
+    verify_command=SignatureTypes.GPG,
+    verify_args=None,
+    verify_additional_files=None,
+    verbose=False,
 ):
     """
     Verify a file with a key using SignatureTypes.GPG by default.
@@ -183,8 +188,6 @@ def verify_file(
     after the specified `key_name`. Therefore if the file is signed with any key
     that is in the selected public keyring, the file will be verified successfully.
     """
-
-    execute_command = [verify_command]
     if not verify_args:
         verify_args = [
             "--no-tty",
@@ -194,11 +197,17 @@ def verify_file(
             "--with-colons",
             "--verify",
         ]
+
+    if not verify_additional_files:
+        verify_additional_files = []
+
+    execute_command = [verify_command]
     execute_command.extend(verify_args)
     if not verbose:
         execute_command.append("--quiet")
     execute_command.extend(["-u", key_name])
     execute_command.append(file_)
+    execute_command.extend(verify_additional_files)
 
     if verbose:
         print(f"Executing command: {execute_command}")

@@ -16,7 +16,7 @@ def parse_args(args):
     )
     parser.add_argument(
         "file",
-        help="Path to the file to sign.",
+        help="Path of the file to sign.",
     )
     parser.add_argument("key", help="Path to the key to sign the file with.")
     parser.add_argument(

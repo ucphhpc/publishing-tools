@@ -98,6 +98,8 @@ def main(args):
         if not remove(file_):
             error_print(f"Failed to remove original file: {file_}")
             return SIGN_FAILURE
+    if verbose:
+        print(f"Successfully signed file: {file_}")
     return SUCCESS
 
 

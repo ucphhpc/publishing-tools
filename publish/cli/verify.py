@@ -196,7 +196,10 @@ def main(args):
         verbose=verbose,
     )
     if not verified:
+        error_print(f"Failed to verify file: {file_}")
         return VERIFY_FAILURE
+    if verbose:
+        print(f"Successfully verified file: {file_}")
     return SUCCESS
 
 

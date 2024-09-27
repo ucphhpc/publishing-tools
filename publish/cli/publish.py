@@ -171,6 +171,8 @@ def main(args):
             f"Failed to correctly publish source: {source} to destination: {destination}"
         )
         return PUBLISH_FAILURE
+    if verbose:
+        print(f"Successfully published source: {source} to destination: {destination}")
     return SUCCESS
 
 

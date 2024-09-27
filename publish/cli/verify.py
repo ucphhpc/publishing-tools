@@ -22,7 +22,7 @@ def parse_args(args):
     )
     parser.add_argument(
         "file",
-        help="Path to the file to verify.",
+        help="Path of the file to verify.",
     )
     parser.add_argument(
         "key",
@@ -33,7 +33,7 @@ def parse_args(args):
         "-vc",
         default=SignatureTypes.GPG.value,
         choices=[SignatureTypes.GPG.value],
-        help="Command to verify the file with. Default is 'gpg'.",
+        help="Command to verify the file with.",
     )
     # https://www.gnupg.org/documentation/manuals/gnupg24/gpg.1.html
     # Recommended by gpg to use the --batch, --status-fd, --with-colons flags when another
@@ -56,7 +56,7 @@ def parse_args(args):
         "-cdf",
         default=None,
         help="""
-        Path to the file that contains the digest to validate against when --with-checksum is enabled.
+        Path of the file containing the digest to validate against when --with-checksum is enabled.
         If none is provided, the checksum file will be assumed to be in the same directory as the verify file with the same base name and the selected --checksum-algorithm extension.
         """,
     )
@@ -65,7 +65,7 @@ def parse_args(args):
         "-cof",
         default=None,
         help="""
-        Path to the file to validate the --checksum-digest-file content against when --with-checksum is enabled.
+        Path of the file to validate the --checksum-digest-file content against when --with-checksum is enabled.
         """,
     )
     parser.add_argument(
@@ -169,7 +169,8 @@ def main(args):
         # The underlying API expects a list of arguments
         verify_args = verify_args.split()
 
-    verified = verify_file(file_, key, verify_command, verify_args, verbose=verbose)
+    verified = verify_file(file_, key, verify_command, verify_args,
+                           verbose=verbose)
     if not verified:
         return VERIFY_FAILURE
     return SUCCESS

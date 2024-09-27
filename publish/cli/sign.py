@@ -16,14 +16,14 @@ def parse_args(args):
     )
     parser.add_argument(
         "file",
-        help="Path to the file to sign.",
+        help="Path of the file to sign.",
     )
-    parser.add_argument("key", help="Path to the key to sign the file with.")
+    parser.add_argument("key", help="Path of the key to sign the file with.")
     parser.add_argument(
         "--output",
         "-o",
         default=None,
-        help="Path to the output file. Default is None, which will output to the FILE path with the --sign-command extension.",
+        help="Path of the output file. Default is None, which will output to the FILE path with the --sign-command extension.",
     )
     parser.add_argument(
         "--remove-original",

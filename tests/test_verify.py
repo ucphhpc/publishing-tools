@@ -10,7 +10,7 @@ from publish.signature import (
     SignatureTypes,
 )
 from publish.utils.io import makedirs, exists, remove, write
-from tests.common import TMP_TEST_PATH, TEST_CONTENT, TEST_FILE
+from tests.common import TMP_TEST_PATH, TEST_CONTENT
 
 TEST_NAME = os.path.basename(__file__).split(".")[0]
 CURRENT_TEST_DIR = os.path.join(TMP_TEST_PATH, TEST_NAME)
@@ -184,7 +184,7 @@ class TestGpGVerifyFile(unittest.TestCase):
 
     def test_verify_additional_files_with_detach_signature(self):
         # Sign the file and output a detached signature
-        output_signed_file = f"{TEST_VERIFY_FILE}.{SignatureTypes.GPG}"
+        output_signed_file = f"{TEST_VERIFY_FILE}-1.{SignatureTypes.GPG}"
         self.assertTrue(
             sign_file(
                 TEST_VERIFY_FILE,
@@ -204,6 +204,31 @@ class TestGpGVerifyFile(unittest.TestCase):
                 verify_command=SignatureTypes.GPG,
                 verify_args=GPG_VERIFY_ARGS,
                 verify_additional_files=[TEST_VERIFY_FILE],
+            )
+        )
+        self.assertTrue(remove(output_signed_file))
+
+    def test_verify_without_additional_detach_signature(self):
+        # Sign the file and output a detached signature
+        output_signed_file = f"{TEST_VERIFY_FILE}-2.{SignatureTypes.GPG}"
+        self.assertTrue(
+            sign_file(
+                TEST_VERIFY_FILE,
+                TEST_KEY_NAME,
+                sign_command=SignatureTypes.GPG,
+                sign_args=GPG_DETACH_SIGN_ARGS,
+                output=output_signed_file,
+            )
+        )
+        self.assertTrue(exists(TEST_VERIFY_FILE))
+        self.assertTrue(exists(output_signed_file))
+        # Verify should fail when missing the additional files for the detached signature
+        self.assertFalse(
+            verify_file(
+                output_signed_file,
+                TEST_KEY_NAME,
+                verify_command=SignatureTypes.GPG,
+                verify_args=GPG_VERIFY_ARGS,
             )
         )
         self.assertTrue(remove(output_signed_file))

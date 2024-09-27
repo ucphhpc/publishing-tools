@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from publish.signature import SignatureTypes, gen_key
+from publish.signature import SignatureTypes, SignatureSources, gen_key
 from publish.utils.io import makedirs, exists, remove, write, hashsum
 from publish.publish import publish, PublishTypes, ChecksumTypes
 from tests.common import TMP_TEST_PATH
@@ -33,6 +33,7 @@ GPG_GEN_KEY_ARGS = GPG_SIGN_COMMON_ARGS + [
     "",
 ]
 GPG_SIGN_ARGS = GPG_SIGN_COMMON_ARGS + ["--sign", "--passphrase", ""]
+GPG_DETACH_SIGN_ARGS = GPG_SIGN_COMMON_ARGS + ["--detach-sign", "--passphrase", ""]
 
 
 class TestPublishFile(unittest.TestCase):
@@ -116,7 +117,7 @@ class TestPublishFile(unittest.TestCase):
         self.assertTrue(exists(publish_destination))
         self.assertTrue(exists(publish_destination + f".{SignatureTypes.GPG}"))
 
-    def test_publish_file_with_checksum_and_signature(self):
+    def test_publish_file_with_signature_custom_output(self):
         # Setup the key to sign the file with
         signature_key = f"{TEST_KEY_NAME}_2"
         self.assertTrue(
@@ -127,9 +128,42 @@ class TestPublishFile(unittest.TestCase):
             )
         )
 
-        # Publish the file with checksum and signature
+        # Publish the file with signature
         publish_destination = os.path.join(
             self.publish_directory, f"{TEST_PUBLISH_FILE}-4"
+        )
+        signature_output = f"{publish_destination}-custom.{SignatureTypes.GPG}"
+        self.assertTrue(
+            publish(
+                self.publish_source,
+                publish_destination,
+                PublishTypes.FILE,
+                with_signature=True,
+                signature_generator=SignatureTypes.GPG,
+                signature_key=signature_key,
+                signauture_args=GPG_SIGN_ARGS,
+                signature_output=signature_output,
+            )
+        )
+        non_existing_default_signature = f"{publish_destination}.{SignatureTypes.GPG}"
+        self.assertTrue(exists(publish_destination))
+        self.assertFalse(exists(non_existing_default_signature))
+        self.assertTrue(exists(signature_output))
+
+    def test_publish_file_with_checksum_and_signature(self):
+        # Setup the key to sign the file with
+        signature_key = f"{TEST_KEY_NAME}_3"
+        self.assertTrue(
+            gen_key(
+                signature_key,
+                key_generator=SignatureTypes.GPG,
+                key_args=GPG_GEN_KEY_ARGS,
+            )
+        )
+
+        # Publish the file with checksum and signature
+        publish_destination = os.path.join(
+            self.publish_directory, f"{TEST_PUBLISH_FILE}-5"
         )
         self.assertTrue(
             publish(
@@ -147,3 +181,133 @@ class TestPublishFile(unittest.TestCase):
         self.assertTrue(exists(publish_destination))
         self.assertTrue(exists(publish_destination + f".{SignatureTypes.GPG}"))
         self.assertTrue(exists(publish_destination + f".{CHECKSUM_ALGORITHM}"))
+
+    def test_publish_with_detach_signature(self):
+        # Setup the key to sign the file with
+        signature_key = f"{TEST_KEY_NAME}_4"
+        self.assertTrue(
+            gen_key(
+                signature_key,
+                key_generator=SignatureTypes.GPG,
+                key_args=GPG_GEN_KEY_ARGS,
+            )
+        )
+
+        # Publish the file with detached signature
+        publish_destination = os.path.join(
+            self.publish_directory, f"{TEST_PUBLISH_FILE}-6"
+        )
+        signature_output = f"{publish_destination}.{SignatureTypes.GPG}"
+        self.assertTrue(
+            publish(
+                self.publish_source,
+                publish_destination,
+                PublishTypes.FILE,
+                with_signature=True,
+                signature_generator=SignatureTypes.GPG,
+                signature_key=signature_key,
+                signauture_args=GPG_DETACH_SIGN_ARGS,
+            )
+        )
+        self.assertTrue(exists(publish_destination))
+        self.assertTrue(exists(signature_output))
+
+    def test_publish_with_detach_signature_custom_output(self):
+        # Setup the key to sign the file with
+        signature_key = f"{TEST_KEY_NAME}_5"
+        self.assertTrue(
+            gen_key(
+                signature_key,
+                key_generator=SignatureTypes.GPG,
+                key_args=GPG_GEN_KEY_ARGS,
+            )
+        )
+
+        # Publish the file with detached signature
+        publish_destination = os.path.join(
+            self.publish_directory, f"{TEST_PUBLISH_FILE}-7"
+        )
+        signature_output = f"{publish_destination}-custom.{SignatureTypes.GPG}"
+        self.assertTrue(
+            publish(
+                self.publish_source,
+                publish_destination,
+                PublishTypes.FILE,
+                with_signature=True,
+                signature_generator=SignatureTypes.GPG,
+                signature_key=signature_key,
+                signauture_args=GPG_DETACH_SIGN_ARGS,
+                signature_output=signature_output,
+            )
+        )
+        self.assertTrue(exists(publish_destination))
+        self.assertTrue(exists(signature_output))
+
+    def test_publish_with_signed_checksum(self):
+        # Setup the key to sign the checksum with
+        signature_key = f"{TEST_KEY_NAME}_6"
+        self.assertTrue(
+            gen_key(
+                signature_key,
+                key_generator=SignatureTypes.GPG,
+                key_args=GPG_GEN_KEY_ARGS,
+            )
+        )
+
+        # Publish the file with a signed checksum file
+        publish_destination = os.path.join(
+            self.publish_directory, f"{TEST_PUBLISH_FILE}-8"
+        )
+        self.assertTrue(
+            publish(
+                self.publish_source,
+                publish_destination,
+                PublishTypes.FILE,
+                with_checksum=True,
+                checksum_algorithm=CHECKSUM_ALGORITHM,
+                with_signature=True,
+                signature_source=SignatureSources.GENERATED_CHECKSUM_FILE,
+                signature_generator=SignatureTypes.GPG,
+                signature_key=signature_key,
+                signauture_args=GPG_SIGN_ARGS,
+            )
+        )
+        self.assertTrue(exists(publish_destination))
+        self.assertFalse(exists(publish_destination + f".{SignatureTypes.GPG}"))
+        output_checksum_file = f"{publish_destination}.{CHECKSUM_ALGORITHM}"
+        self.assertTrue(exists(output_checksum_file))
+        self.assertTrue(exists(output_checksum_file + f".{SignatureTypes.GPG}"))
+
+    def test_publish_with_detached_signed_checksum(self):
+        # Setup the key to sign the checksum with
+        signature_key = f"{TEST_KEY_NAME}_7"
+        self.assertTrue(
+            gen_key(
+                signature_key,
+                key_generator=SignatureTypes.GPG,
+                key_args=GPG_GEN_KEY_ARGS,
+            )
+        )
+
+        # Publish the file with a signed checksum file
+        publish_destination = os.path.join(
+            self.publish_directory, f"{TEST_PUBLISH_FILE}-9"
+        )
+        self.assertTrue(
+            publish(
+                self.publish_source,
+                publish_destination,
+                PublishTypes.FILE,
+                with_checksum=True,
+                checksum_algorithm=CHECKSUM_ALGORITHM,
+                with_signature=True,
+                signature_source=SignatureSources.GENERATED_CHECKSUM_FILE,
+                signature_generator=SignatureTypes.GPG,
+                signature_key=signature_key,
+                signauture_args=GPG_DETACH_SIGN_ARGS,
+            )
+        )
+        self.assertTrue(exists(publish_destination))
+        output_checksum_file = f"{publish_destination}.{CHECKSUM_ALGORITHM}"
+        self.assertTrue(exists(output_checksum_file))
+        self.assertTrue(exists(output_checksum_file + f".{SignatureTypes.GPG}"))

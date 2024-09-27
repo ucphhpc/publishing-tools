@@ -7,6 +7,11 @@ class SignatureTypes(StrEnum):
     GPG = "gpg"
 
 
+class SignatureSources(StrEnum):
+    SOURCE = "source"
+    GENERATED_CHECKSUM_FILE = "generated-checksum-file"
+
+
 # When using the gpg --fingerprint command with --with-colons
 # the fingerprint is stored in the 10th field in the output string with the "fpr" prefix
 # if you split on the : character

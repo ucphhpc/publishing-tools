@@ -43,6 +43,7 @@ GPG_GET_FINGERPRINT_ARGS = GPG_SIGN_COMMON_ARGS + [
     "--fingerprint",
 ]
 GPG_SIGN_ARGS = GPG_SIGN_COMMON_ARGS + ["--sign", "--passphrase", ""]
+GPG_DETACH_SIGN_ARGS = GPG_SIGN_COMMON_ARGS + ["--detach-sign", "--passphrase", ""]
 GPG_DELETE_ARGS = GPG_SIGN_COMMON_ARGS + [
     "--delete-secret-and-public-key",
     "--yes",
@@ -159,4 +160,24 @@ class TestSignCLI(unittest.TestCase):
             SUCCESS,
         )
         self.assertFalse(exists(test_sign_file))
+        self.assertTrue(exists(test_sign_file_output))
+
+    def test_sign_detach_signature(self):
+        test_sign_file = os.path.join(CURRENT_TEST_DIR, f"{TEST_FILE}-4")
+        self.assertTrue(write(test_sign_file, TEST_CONTENT))
+        self.assertTrue(exists(test_sign_file))
+
+        test_sign_file_output = f"{test_sign_file}.{SignatureTypes.GPG}"
+        self.assertEqual(
+            main(
+                [
+                    test_sign_file,
+                    TEST_KEY_NAME,
+                    "--signature-args",
+                    GPG_DETACH_SIGN_ARGS,
+                ]
+            ),
+            SUCCESS,
+        )
+        self.assertTrue(exists(test_sign_file))
         self.assertTrue(exists(test_sign_file_output))

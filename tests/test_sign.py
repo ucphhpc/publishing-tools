@@ -144,7 +144,7 @@ class TestGpGSignFile(unittest.TestCase):
         self.assertTrue(write(test_file_path, TEST_CONTENT))
         self.assertTrue(exists(test_file_path))
 
-        test_detached_signed_file_ouput = f"{test_file_path}.sig"
+        test_detached_signed_file_ouput = f"{test_file_path}.{SignatureTypes.GPG}"
         # Sign the temporary file
         self.assertTrue(
             sign_file(
@@ -156,4 +156,5 @@ class TestGpGSignFile(unittest.TestCase):
         )
 
         # Verify the signed file exists
+        self.assertTrue(exists(test_file_path))
         self.assertTrue(exists(test_detached_signed_file_ouput))

@@ -1,4 +1,3 @@
-import os
 from podman import PodmanClient
 from podman.domain.images import Image
 from podman.errors import ImageNotFound, APIError, BuildError

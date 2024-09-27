@@ -1,7 +1,7 @@
 import argparse
 import sys
 import os
-from publish.signature import SignatureTypes
+from publish.signature import SignatureTypes, SignatureSources
 from publish.publish import PublishTypes, publish, ChecksumTypes
 from publish.publish_container import get_image
 from publish.utils.io import exists
@@ -61,6 +61,16 @@ def parse_args(args):
         help="Whether to also publish a signed edition of the source to the specified destination directory.",
     )
     parser.add_argument(
+        "--signature-source",
+        "-ss",
+        default=SignatureSources.SOURCE_FILE,
+        choices=[
+            SignatureSources.SOURCE_FILE,
+            SignatureSources.GENERATED_CHECKSUM_FILE,
+        ],
+        help="What should be used as input for the signature. Default is the source file. If --with-checksum is enabled, the checksum file can also be used.",
+    )
+    parser.add_argument(
         "--signature-generator",
         "-sg",
         default=SignatureTypes.GPG.value,
@@ -80,6 +90,12 @@ def parse_args(args):
         help="Optional arguments to give the selected --signature-generator.",
     )
     parser.add_argument(
+        "--signature-output",
+        "-so",
+        default=None,
+        help="Path of the generated signature file. Default is None, which will output to the FILE path with the --signature-generator extension",
+    )
+    parser.add_argument(
         "--verbose",
         "-v",
         action="store_true",
@@ -97,9 +113,11 @@ def main(args):
     with_checksum = parsed_args.with_checksum
     checksum_algorithm = parsed_args.checksum_algorithm
     with_signature = parsed_args.with_signature
+    signature_source = parsed_args.signature_source
     signature_generator = parsed_args.signature_generator
     signature_key = parsed_args.signature_key
     signature_args = parsed_args.signature_args
+    signature_output = parsed_args.signature_output
     verbose = parsed_args.verbose
 
     if publish_type == PublishTypes.FILE:
@@ -120,6 +138,15 @@ def main(args):
         )
         return PUBLISH_FAILURE
 
+    if (
+        signature_source == SignatureSources.GENERATED_CHECKSUM_FILE
+        and not with_checksum
+    ):
+        error_print(
+            "The --signature-source was set to use the generated checksum file as its input, but --with-checksum was not enabled. Please enable it to use the checksum file as the signature source."
+        )
+        return PUBLISH_FAILURE
+
     if isinstance(signature_args, str):
         # The underlying API expects a list of arguments
         signature_args = signature_args.split()
@@ -137,6 +164,7 @@ def main(args):
         signature_generator=signature_generator,
         signature_key=signature_key,
         signauture_args=signature_args,
+        signature_output=signature_output,
         verbose=verbose,
     ):
         error_print(

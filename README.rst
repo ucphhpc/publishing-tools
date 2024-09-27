@@ -48,7 +48,7 @@ The selection can be controlled via the ``--publish-type`` argument that specifi
 
         positional arguments:
         source                The source input to publish.
-        destination           Path to the destination to publish to, can be either a directory .
+        destination           Destination path to publish to. Either an output directory or an archive file.
 
         options:
         -h, --help            show this help message and exit
@@ -59,15 +59,15 @@ The selection can be controlled via the ``--publish-type`` argument that specifi
         --with-signature, -ws
                                 Whether to also publish a signed edition of the source to the specified destination directory. (default: False)
         --signature-generator {gpg}, -sg {gpg}
-                                Which signaturer to use when --with-signature is enabled. (default: gpg)
+                                Which signature tool to use when --with-signature is enabled. (default: gpg)
         --signature-key SIGNATURE_KEY, -sk SIGNATURE_KEY
-                                Which key should be used to sign with when --with-signature is enabled. (default: None)
+                                Which key to sign with when --with-signature is enabled. (default: None)
         --signature-args SIGNATURE_ARGS, -sa SIGNATURE_ARGS
                                 Optional arguments to give the selected --signature-generator. (default: --sign --batch)
         --verbose, -v         Flag to enable verbose output. (default: False)
 
 After a source has been published with a checksum and/or signature, the ``verify`` tool can be used to verify the integrity of the source.
-Information for how this tool can be used can be discovered via the normal `--help` flag:
+Information on using this tool can be discovered via the usual `--help` flag:
 
 .. code-block:: bash
 
@@ -84,21 +84,21 @@ Information for how this tool can be used can be discovered via the normal `--he
         key
 
         positional arguments:
-        file                  Path to the file to verify.
+        file                  Path of the file to verify.
         key                   The key that the --verify-command should use to verify the file with.
 
         options:
         -h, --help            show this help message and exit
         --verify-command {gpg}, -vc {gpg}
-                                Command to verify the file with. Default is 'gpg'. (default: gpg)
+                                Command to verify the file with. (default: gpg)
         --verify-args VERIFY_ARGS, -va VERIFY_ARGS
                                 Additional arguments to pass to the verify command. (default: --verify --batch --status-fd 0 --with-colons)
         --with-checksum, -wc  Whether to also verify a checksum file. (default: False)
         --checksum-digest-file CHECKSUM_DIGEST_FILE, -cdf CHECKSUM_DIGEST_FILE
-                                Path to the file that contains the digest to validate against when --with-checksum is enabled. If none is provided, the checksum file will be assumed to be in the same directory as
+                                Path of the file containing the digest to validate against when --with-checksum is enabled. If none is provided, the checksum file will be assumed to be in the same directory as
                                 the verify file with the same base name and the selected --checksum-algorithm extension. (default: None)
         --checksum-original-file CHECKSUM_ORIGINAL_FILE, -cof CHECKSUM_ORIGINAL_FILE
-                                Path to the file to validate the --checksum-digest-file content against when --with-checksum is enabled. (default: None)
+                                Path of the file to validate the --checksum-digest-file content against when --with-checksum is enabled. (default: None)
         --checksum-algorithm {sha256,sha512,md5}, -ca {sha256,sha512,md5}
                                 Which checksum algorithm to use for verification when --with-checksum is enabled. (default: sha256)
         --verbose, -v         Flag to enable verbose output. (default: False)
@@ -112,7 +112,7 @@ The following examples illustrate how the tools can be used to publish a file, a
 Publishing a file
 -----------------
 
-Publishing a file with a checksum and signature, this requires that a valid signature key is available to sign the file with.
+Publishing a file with a checksum and signature requires that a valid signature key is available to sign the file with.
 If GPG is used as the signature generator, the list of available keys can be discovered via the command ``gpg --list-keys``.
 
 First we create a dummy file to publish:
@@ -140,15 +140,14 @@ Publishing a container image
 ----------------------------
 
 To publish a container image, the publish tool expects that the ``--publish-type container_image_archive`` flag is set.
-In addition, the required positional `source` argument is expected to be set to the container image name or it's id.
+In addition, the required positional `source` argument is expected to be set to the container image name or its id.
 Finally, the destination should be set to the path where the container image archive should be published.
 
 .. code-block:: bash
 
     $ publish --publish-type container_image_archive --with-checksum --with-signature --signature-key <key_id_or_name> <container_image_name_or_id> /tmp/container_image.tar
 
-The result of this command will be a container image archive, a checksum file which content is calculated based on the generated container image archive file,
-and finally a version of the archived file that has been signed in the destination directory:
+The result of this command in the destination directory will be a container image archive, a checksum file calculated based on the generated container image archive file, and finally a signed version of the archived file:
 
 .. code-block:: bash
 
@@ -158,12 +157,12 @@ and finally a version of the archived file that has been signed in the destinati
     container_image.tar.sha256
 
 
-Verifing a file publication
+Verifying a file publication
 ---------------------------
 
 To verify a signed file publication, the ``verify`` tool can be used.
-The tool expects a path to the file that should be verified and a valid key that should be used to verify the file via the selected ``--verify-command``.
-Currently the tool only supports GPG as the verification command, but this can be extended in the future.
+The tool expects a path to the file to be verified and a valid key used to verify the file via the selected ``--verify-command``.
+Currently the tool only supports GPG as the verification command, but that may be extended in the future.
 In addition to signature verification, the tool can also verify a checksum file if the ``--with-checksum`` flag is set.
 When this flag is set, the tool requires that both the signature and checksum checks will pass for the verification to be successful.
 
@@ -188,4 +187,4 @@ After a container image achive has been published, the verification can be done 
 
     $ verify --with-checksum /tmp/container_image.tar.gpg <key_id_or_name>
 
-The expectations for the verification are the same as for the file verification, i.e. that the signature and checksum checks will pass for the verification to be successful.
+The requirements for the verification are the same as for the file verification, i.e. that the signature and checksum checks both need to pass for the verification to be successful.

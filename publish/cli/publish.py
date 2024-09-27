@@ -27,7 +27,7 @@ def parse_args(args):
     )
     parser.add_argument(
         "destination",
-        help="Path to the destination to publish to, can be either a directory .",
+        help="Destination path to publish to. Either an output directory or an archive file.",
     )
     parser.add_argument(
         "--publish-type",
@@ -65,13 +65,13 @@ def parse_args(args):
         "-sg",
         default=SignatureTypes.GPG.value,
         choices=[SignatureTypes.GPG.value],
-        help="Which signaturer to use when --with-signature is enabled.",
+        help="Which signature tool to use when --with-signature is enabled.",
     )
     parser.add_argument(
         "--signature-key",
         "-sk",
         default=None,
-        help="Which key should be used to sign with when --with-signature is enabled.",
+        help="Which key to sign with when --with-signature is enabled.",
     )
     parser.add_argument(
         "--signature-args",

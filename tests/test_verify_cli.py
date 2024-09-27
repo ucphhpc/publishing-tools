@@ -227,6 +227,11 @@ class TestVerifyCLI(unittest.TestCase):
         )
         self.assertTrue(exists(test_verify_file))
         self.assertTrue(exists(test_signed_file))
+        self.assertTrue(
+            write_checksum_file(test_verify_file, algorithm=ChecksumTypes.SHA256)
+        )
+        checksum_file = f"{test_verify_file}.{ChecksumTypes.SHA256}"
+        self.assertTrue(exists(checksum_file))
 
         self.assertEqual(
             main(

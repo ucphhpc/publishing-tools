@@ -143,6 +143,14 @@ This command will generate a checksum file and a signature file in the destinati
     hello.txt.gpg
     hello.txt.sha256
 
+By default, the generated signature file is named after the original file and is a self contained signature file.
+The checksum file is named after the original file and has the checksum algorithm extension appended to the file name.
+However, when using the default GPG signaturer, and a detached signature is desired, the ``--signature-args`` option can be used to specify the ``--detach-sign`` argument.
+An example of generating a detached signature can be seen below:
+
+.. code-block:: bash
+
+    $ publish --publish-type file --with-checksum --with-signature --signature-key <key_id_or_name> --signature-args "--detach-sign --batch" /tmp/hello.txt /tmp/hello_published.txt
 
 Another common option, when publishing a file, is to use the checksum file as the source for the signature.
 This can be done by setting the ``--signature-source generated_checksum_file`` flag.
@@ -213,6 +221,13 @@ Whereas the ``--checksum-original-file <path>`` argument needs to be set to the 
 .. code-block:: bash
 
     $ verify --with-checksum --checksum-digest-file /tmp/hello_published.txt.sha256 --checksum-original-file hello_published.txt hello_published.sha256.gpg <key_id_or_name>
+
+Furthermore, the ``verify`` tool also lets you verify a detached signature. To accomplish this, the ``verify`` tool requires that the ``--verify-with-additional-files`` flag is set to the path of the original file that the detached signature was generated for.
+An example of verifying a detached signature can be seen below:
+
+.. code-block:: bash
+
+    $ verify --verify-with-additional-files /tmp/hello.txt /tmp/hello.txt.gpg <key_id_or_name>
 
 
 Verifying a container image publication

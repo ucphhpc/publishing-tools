@@ -23,25 +23,24 @@ Usage
 
 The package provides a set of complementary tools that can be used as part of publishing packages and container images.
 In particular, the package can help with optimizing the workflow for signing, checksumming, and verifying the integrity of artifacts to be published.
-The package provides the ``publish``, ``sign``, and ``verify`` tools:
+The package provides the ``publish``, ``sign``, and ``verify`` tools.
 
-
-
-The overall ``publish`` tool can be used to publish a source to a destination, optionally with an associated checksum and/or signature file.
+The overall ``publish`` tool can be used to publish a source to a destination, optionally with an associated checksum and signature.
 The ``publish`` tool currently supports two types of ``sources``, i.e. either a file or (`Podman <https://docs.podman.io/en/latest/>`_) container image.
-The selection can be controlled via the ``--publish-type`` argument that specifies what type of source should be published.
+The selection can be controlled via the ``--publish-type`` argument that specifies what type of source should be published:
 
 .. code-block:: bash
 
-    $ publish --help
-        [-h]
+    $ publish.py [-h]
         [--publish-type {file,container_image_archive}]
         [--with-checksum]
         [--checksum-algorithm {sha256,sha512,md5}]
         [--with-signature]
+        [--signature-source {source_input,generated_checksum_file}]
         [--signature-generator {gpg}]
         [--signature-key SIGNATURE_KEY]
         [--signature-args SIGNATURE_ARGS]
+        [--signature-output SIGNATURE_OUTPUT]
         [--verbose]
         source
         destination
@@ -58,12 +57,18 @@ The selection can be controlled via the ``--publish-type`` argument that specifi
                                 Which checksum algorithm to use when --with-checksum is enabled. (default: sha256)
         --with-signature, -ws
                                 Whether to also publish a signed edition of the source to the specified destination directory. (default: False)
+        --signature-source {source_input,generated_checksum_file}, -ss {source_input,generated_checksum_file}
+                                What should be used as input for the signature. Default is the source file. If --with-checksum is enabled, the checksum
+                                file can also be used. (default: source_input)
         --signature-generator {gpg}, -sg {gpg}
                                 Which signature tool to use when --with-signature is enabled. (default: gpg)
         --signature-key SIGNATURE_KEY, -sk SIGNATURE_KEY
                                 Which key to sign with when --with-signature is enabled. (default: None)
         --signature-args SIGNATURE_ARGS, -sa SIGNATURE_ARGS
                                 Optional arguments to give the selected --signature-generator. (default: --sign --batch)
+        --signature-output SIGNATURE_OUTPUT, -so SIGNATURE_OUTPUT
+                                Path of the generated signature file. Default is None, which will output to the FILE path with the --signature-generator
+                                extension (default: None)
         --verbose, -v         Flag to enable verbose output. (default: False)
 
 After a source has been published with a checksum and/or signature, the ``verify`` tool can be used to verify the integrity of the source.
@@ -71,8 +76,8 @@ Information on using this tool can be discovered via the usual `--help` flag:
 
 .. code-block:: bash
 
-    verify --help
-        [-h]
+    verify.py [-h]
+        [--verify-with-additional-files VERIFY_WITH_ADDITIONAL_FILES [VERIFY_WITH_ADDITIONAL_FILES ...]]
         [--verify-command {gpg}]
         [--verify-args VERIFY_ARGS]
         [--with-checksum]
@@ -89,6 +94,8 @@ Information on using this tool can be discovered via the usual `--help` flag:
 
         options:
         -h, --help            show this help message and exit
+        --verify-with-additional-files VERIFY_WITH_ADDITIONAL_FILES [VERIFY_WITH_ADDITIONAL_FILES ...], -vwaf VERIFY_WITH_ADDITIONAL_FILES [VERIFY_WITH_ADDITIONAL_FILES ...]
+                                Additional files to verify with the key. This is useful when verifying a detached signature. (default: [])
         --verify-command {gpg}, -vc {gpg}
                                 Command to verify the file with. (default: gpg)
         --verify-args VERIFY_ARGS, -va VERIFY_ARGS
@@ -136,12 +143,31 @@ This command will generate a checksum file and a signature file in the destinati
     hello.txt.gpg
     hello.txt.sha256
 
+
+Another common option, when publishing a file, is to use the checksum file as the source for the signature.
+This can be done by setting the ``--signature-source generated_checksum_file`` flag.
+In this case, the checksum file will be used as the input for the signature generation.
+The following command illustrates how this can be done:
+
+.. code-block:: bash
+
+    publish --publish-type file --with-checksum --with-signature --signature-source generated_checksum_file --signature-key <key_id_or_name> /tmp/hello.txt /tmp/hello_published.txt
+
+The result of this command will be the same as the previous example, but the signature will be generated based on the checksum file:
+
+.. code-block:: bash
+
+    $ ls /tmp/hello_published.txt*
+    hello.txt
+    hello.txt.sha256
+    hello.txt.sha256.gpg
+
 Publishing a container image
 ----------------------------
 
 To publish a container image, the publish tool expects that the ``--publish-type container_image_archive`` flag is set.
 In addition, the required positional `source` argument is expected to be set to the container image name or its id.
-Finally, the destination should be set to the path where the container image archive should be published.
+Finally, the destination should be set to the path where the container image archive should be published:
 
 .. code-block:: bash
 
@@ -156,6 +182,7 @@ The result of this command in the destination directory will be a container imag
     container_image.tar.gpg
     container_image.tar.sha256
 
+Similairly to the file publishing, the checksum file can be also used as the source for the signature generation.
 
 Verifying a file publication
 ---------------------------
@@ -174,8 +201,16 @@ An example of a simple verification of a signed file with an associated checksum
 
 With this command, the verify tool will automatically try to discover the checksum digest file and the original published file in the same directory as the file to verify.
 If the expected files are not present in the same directory, then the ``--checksum-digest-file``/``--checksum-original-file`` arguments can be used to specify the paths to the required files.
-
 The result of the verification will be a message that indicates if the verification was successful or not.
+
+To verify a signed checksum file, the signed checksum file can be used as the input for the verification.
+However, since the file layout naming of the checksum and signature file is different, the ``--checksum-digest-file <path`` argument needs to be set to the path of the checksum file.
+Whereas the ``--checksum-original-file <path>`` argument needs to be set to the path of the original file that the checksum file was generated for:
+
+.. code-block:: bash
+
+    $ verify --with-checksum --checksum-digest-file /tmp/hello_published.txt.sha256 --checksum-original-file hello_published.txt hello_published.sha256.gpg <key_id_or_name>
+
 
 Verifying a container image publication
 ---------------------------------------
@@ -188,3 +223,4 @@ After a container image achive has been published, the verification can be done 
     $ verify --with-checksum /tmp/container_image.tar.gpg <key_id_or_name>
 
 The requirements for the verification are the same as for the file verification, i.e. that the signature and checksum checks both need to pass for the verification to be successful.
+As with the file verification, the generated checksum file can be used as the input for the signature verification, if it was selected to be signed as part of the publication.

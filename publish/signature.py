@@ -8,8 +8,8 @@ class SignatureTypes(StrEnum):
 
 
 class SignatureSources(StrEnum):
-    SOURCE = "source"
-    GENERATED_CHECKSUM_FILE = "generated-checksum-file"
+    SOURCE_INPUT = "source_input"
+    GENERATED_CHECKSUM_FILE = "generated_checksum_file"
 
 
 # When using the gpg --fingerprint command with --with-colons

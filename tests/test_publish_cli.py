@@ -2,7 +2,7 @@ import unittest
 import os
 
 from publish.utils.io import exists, makedirs, remove, write, load, hashsum
-from publish.signature import gen_key, SignatureTypes
+from publish.signature import gen_key, SignatureTypes, SignatureSources
 from publish.publish_container import build_image, remove_image
 from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND, IMAGE_NOT_FOUND
 from publish.cli.publish import main, ChecksumTypes, PublishTypes
@@ -61,6 +61,7 @@ GPG_GEN_KEY_ARGS = GPG_SIGN_COMMON_ARGS + [
     "",
 ]
 GPG_SIGN_ARGS = GPG_SIGN_COMMON_ARGS + ["--sign", "--passphrase", ""]
+GPG_DETACH_SIGN_ARGS = GPG_SIGN_COMMON_ARGS + ["--detach-sign", "--passphrase", ""]
 
 
 class TestPublishCLI(unittest.TestCase):
@@ -236,3 +237,118 @@ class TestPublishCLI(unittest.TestCase):
         )
         self.assertTrue(exists(publish_destination))
         self.assertTrue(exists(publish_signature_destination))
+
+    def test_publish_with_detached_signature(self):
+        # Setup the key to sign the file with
+        signature_key = f"{TEST_KEY_NAME}_2"
+        self.assertTrue(
+            gen_key(
+                signature_key,
+                key_generator=SignatureTypes.GPG,
+                key_args=GPG_GEN_KEY_ARGS,
+            )
+        )
+
+        # Publish the file with detached signature
+        publish_destination = (
+            f"{TEST_PUBLISH_INPUT}{PUBLISH_TYPE_EXTENSION[PublishTypes.FILE]}-4"
+        )
+        publish_signature_destination = f"{publish_destination}.{SignatureTypes.GPG}"
+        self.assertEqual(
+            main(
+                [
+                    PUBLISH_TYPE_SOURCE[PublishTypes.FILE],
+                    publish_destination,
+                    "--publish-type",
+                    PublishTypes.FILE,
+                    "--with-signature",
+                    "--signature-generator",
+                    SignatureTypes.GPG,
+                    "--signature-key",
+                    signature_key,
+                    "--signature-args",
+                    GPG_DETACH_SIGN_ARGS,
+                ]
+            ),
+            SUCCESS,
+        )
+        self.assertTrue(exists(publish_destination))
+        self.assertTrue(exists(publish_signature_destination))
+
+    def test_publish_image_with_detached_signature(self):
+        # Setup the key to sign the file with
+        signature_key = f"{TEST_KEY_NAME}_3"
+        self.assertTrue(
+            gen_key(
+                signature_key,
+                key_generator=SignatureTypes.GPG,
+                key_args=GPG_GEN_KEY_ARGS,
+            )
+        )
+
+        publish_destination = f"{TEST_PUBLISH_INPUT}{PUBLISH_TYPE_EXTENSION[PublishTypes.CONTAINER_IMAGE_ARCHIVE]}-3"
+        publish_signature_destination = f"{publish_destination}.{SignatureTypes.GPG}"
+        self.assertEqual(
+            main(
+                [
+                    PUBLISH_TYPE_SOURCE[PublishTypes.CONTAINER_IMAGE_ARCHIVE],
+                    publish_destination,
+                    "--publish-type",
+                    PublishTypes.CONTAINER_IMAGE_ARCHIVE,
+                    "--with-signature",
+                    "--signature-generator",
+                    SignatureTypes.GPG,
+                    "--signature-key",
+                    signature_key,
+                    "--signature-args",
+                    GPG_DETACH_SIGN_ARGS,
+                ]
+            ),
+            SUCCESS,
+        )
+        self.assertTrue(exists(publish_destination))
+        self.assertTrue(exists(publish_signature_destination))
+
+    def test_publish_with_signed_checksum(self):
+        # Setup the key to sign the file with
+        signature_key = f"{TEST_KEY_NAME}_4"
+        self.assertTrue(
+            gen_key(
+                signature_key,
+                key_generator=SignatureTypes.GPG,
+                key_args=GPG_GEN_KEY_ARGS,
+            )
+        )
+
+        # Publish the file with detached signature
+        publish_destination = (
+            f"{TEST_PUBLISH_INPUT}{PUBLISH_TYPE_EXTENSION[PublishTypes.FILE]}-5"
+        )
+        self.assertEqual(
+            main(
+                [
+                    PUBLISH_TYPE_SOURCE[PublishTypes.FILE],
+                    publish_destination,
+                    "--publish-type",
+                    PublishTypes.FILE,
+                    "--with-checksum",
+                    "--checksum-algorithm",
+                    ChecksumTypes.SHA256.value,
+                    "--with-signature",
+                    "--signature-generator",
+                    SignatureTypes.GPG,
+                    "--signature-source",
+                    SignatureSources.GENERATED_CHECKSUM_FILE,
+                    "--signature-key",
+                    signature_key,
+                    "--signature-args",
+                    GPG_SIGN_ARGS,
+                ]
+            ),
+            SUCCESS,
+        )
+        self.assertTrue(exists(publish_destination))
+        self.assertFalse(exists(f"{publish_destination}.{SignatureTypes.GPG}"))
+        output_checksum_file = f"{publish_destination}.{ChecksumTypes.SHA256.value}"
+        self.assertTrue(exists(output_checksum_file))
+        self.assertTrue(exists(output_checksum_file + f".{SignatureTypes.GPG}"))

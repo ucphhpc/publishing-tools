@@ -65,7 +65,7 @@ class TestPublishFile(unittest.TestCase):
         )
         self.assertTrue(exists(publish_destination))
 
-    def test_source_file_checksum(self):
+    def test_FILE_checksum(self):
         # Get the checksum of the file
         checksum = hashsum(self.publish_source, algorithm=CHECKSUM_ALGORITHM)
         self.assertIsNotNone(checksum)

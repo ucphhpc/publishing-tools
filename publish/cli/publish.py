@@ -63,9 +63,9 @@ def parse_args(args):
     parser.add_argument(
         "--signature-source",
         "-ss",
-        default=SignatureSources.SOURCE_FILE,
+        default=SignatureSources.SOURCE_INPUT,
         choices=[
-            SignatureSources.SOURCE_FILE,
+            SignatureSources.SOURCE_INPUT,
             SignatureSources.GENERATED_CHECKSUM_FILE,
         ],
         help="What should be used as input for the signature. Default is the source file. If --with-checksum is enabled, the checksum file can also be used.",
@@ -161,6 +161,7 @@ def main(args):
         with_checksum=with_checksum,
         checksum_algorithm=checksum_algorithm,
         with_signature=with_signature,
+        signature_source=signature_source,
         signature_generator=signature_generator,
         signature_key=signature_key,
         signauture_args=signature_args,

@@ -20,7 +20,7 @@ def publish(
     with_checksum=False,
     checksum_algorithm=ChecksumTypes.SHA256,
     with_signature=False,
-    signature_source=SignatureSources.SOURCE,
+    signature_source=SignatureSources.SOURCE_INPUT,
     signature_generator=SignatureTypes.GPG,
     signature_key=None,
     signauture_args=None,

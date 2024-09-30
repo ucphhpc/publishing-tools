@@ -196,7 +196,7 @@ The result of this command in the destination directory will be a container imag
 Similairly to the file publishing, the checksum file can be also used as the source for the signature generation.
 
 Verifying a file publication
----------------------------
+----------------------------
 
 To verify a signed file publication, the ``verify`` tool can be used.
 The tool expects a path to the file to be verified and a valid key used to verify the file via the selected ``--verify-command``.

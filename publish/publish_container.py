@@ -44,7 +44,7 @@ def container_publish_to_archive(
 
     try:
         # Returns a tarball of the image
-        tarball = image.save()
+        tarball = image.save(named=True)
         return i_write(destination, tarball, mode="wb")
     except APIError as error:
         if verbose:

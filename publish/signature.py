@@ -1,4 +1,5 @@
 import os
+from publish.utils.io import write
 from publish.utils.job import run
 from publish.common import StrEnum
 
@@ -174,6 +175,53 @@ def sign_file(
             )
         return False
     return True
+
+
+def export_signature_key(
+    key_name,
+    sign_command=SignatureTypes.GPG,
+    sign_args=None,
+    verbose=False,
+):
+    export_key_command = [sign_command]
+    if not sign_args:
+        sign_args = []
+
+    export_key_command.extend(sign_args)
+    if "--armor" not in export_key_command:
+        export_key_command.append("--armor")
+    if "--export" not in export_key_command:
+        export_key_command.append("--export")
+    export_key_command.append(key_name)
+
+    if verbose:
+        print(f"Exporting the signature key: {key_name}")
+    success, result = run(export_key_command, output_format="str")
+    if not success:
+        if verbose:
+            print(
+                f"Failed to export the signature key: {key_name}, output: {result['output']}, error: {result['error']}"
+            )
+        return None
+    return result["output"]
+
+
+def write_signature_key_file(
+    key_name,
+    destination,
+    sign_command=SignatureTypes.GPG,
+    sign_args=None,
+    verbose=False,
+):
+    signature_key = export_signature_key(
+        key_name,
+        sign_command=sign_command,
+        sign_args=sign_args,
+        verbose=verbose,
+    )
+    if not signature_key:
+        return False
+    return write(destination, signature_key)
 
 
 def verify_file(

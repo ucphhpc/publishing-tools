@@ -1,10 +1,15 @@
 import sys
 import os
 import argparse
-from publish.utils.io import exists, remove
-from publish.signature import SignatureTypes, sign_file
+from publish.utils.io import exists
+from publish.signature import SignatureTypes, sign_file, write_signature_key_file
 from publish.cli.common import error_print
-from publish.cli.return_codes import SUCCESS, FILE_NOT_FOUND, SIGN_FAILURE
+from publish.cli.return_codes import (
+    SUCCESS,
+    FILE_NOT_FOUND,
+    SIGN_FAILURE,
+    SIGN_KEY_FILE_FAILURE,
+)
 
 SCRIPT_NAME = __file__
 
@@ -26,13 +31,6 @@ def parse_args(args):
         help="Path of the output file. Default is None, which will output to the FILE path with the --sign-command extension.",
     )
     parser.add_argument(
-        "--remove-original",
-        "-ro",
-        action="store_true",
-        default=False,
-        help="Flag to remove the original file after signing.",
-    )
-    parser.add_argument(
         "--signature-generator",
         "-sg",
         default=SignatureTypes.GPG.value,
@@ -44,6 +42,25 @@ def parse_args(args):
         "-sa",
         default="--sign --batch",
         help="Optional arguments to give the selected --signature-generator.",
+    )
+    parser.add_argument(
+        "--with-signature-key-output",
+        "-wsko",
+        action="store_true",
+        default=False,
+        help="Flag on whether the 'key' used to sign 'file' should be generated.",
+    )
+    parser.add_argument(
+        "--signature-key-output-path",
+        "-skop",
+        default=None,
+        help="The path to where the --with-signature-key-output should be written. If None is set, the default is the same path as the 'file' with an `.asc` extension.",
+    )
+    parser.add_argument(
+        "--signature-key-output-args",
+        "-skoa",
+        default="--armor --export",
+        help="Optional arguments to give the selected --signature-generator when generating the key.",
     )
     parser.add_argument(
         "--verbose",
@@ -63,9 +80,11 @@ def main(args):
         output = os.path.realpath(os.path.expanduser(parsed_args.output))
     else:
         output = None
-    remove_original = parsed_args.remove_original
     signature_generator = parsed_args.signature_generator
     signature_args = parsed_args.signature_args
+    with_signature_key_output = parsed_args.with_signature_key_output
+    signature_key_output_path = parsed_args.signature_key_output_path
+    signature_key_output_args = parsed_args.signature_key_output_args
     verbose = parsed_args.verbose
 
     if not exists(file_):
@@ -75,6 +94,10 @@ def main(args):
     if isinstance(signature_args, str):
         # The underlying API expects a list of arguments
         signature_args = signature_args.split()
+
+    if isinstance(signature_key_output_args, str):
+        # The underlying API expects a list of arguments
+        signature_key_output_args = signature_key_output_args.split()
 
     if verbose:
         print(
@@ -92,12 +115,22 @@ def main(args):
     if not signed:
         error_print(f"Failed to sign file: {file_}")
         return SIGN_FAILURE
-    if remove_original:
+    if with_signature_key_output:
+        if not signature_key_output_path:
+            signature_key_output_path = f"{file_}.asc"
         if verbose:
-            print(f"Removing original file: {file_}")
-        if not remove(file_):
-            error_print(f"Failed to remove original file: {file_}")
-            return SIGN_FAILURE
+            print(
+                f"Writing signature key to file: {signature_key_output_path} with signature generator: {signature_generator} with arguments: {signature_args}"
+            )
+        if not write_signature_key_file(
+            key,
+            signature_key_output_path,
+            sign_command=signature_generator,
+            sign_args=signature_key_output_args,
+            verbose=verbose,
+        ):
+            error_print(f"Failed to write signature key to file: {key}")
+            return SIGN_KEY_FILE_FAILURE
     if verbose:
         print(f"Successfully signed file: {file_}")
     return SUCCESS

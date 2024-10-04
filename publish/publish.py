@@ -1,5 +1,10 @@
 from publish.utils.io import exists, copy
-from publish.signature import sign_file, SignatureTypes, SignatureSources
+from publish.signature import (
+    sign_file,
+    SignatureTypes,
+    SignatureSources,
+    write_signature_key_file,
+)
 from publish.publish_container import container_publish_to_archive
 from publish.checksum import ChecksumTypes, write_checksum_file
 from publish.common import StrEnum
@@ -71,6 +76,26 @@ def publish(
         if not signed_file:
             return False
     return True
+
+
+def publish_signature_key(
+    key_name,
+    destination,
+    sign_command=SignatureTypes.GPG,
+    sign_args=None,
+    verbose=False,
+):
+    if verbose:
+        print(
+            f"Writing signature key to file: {destination} with signature generator: {sign_command} with arguments: {sign_args}"
+        )
+    return write_signature_key_file(
+        key_name,
+        destination,
+        sign_command=sign_command,
+        sign_args=sign_args,
+        verbose=verbose,
+    )
 
 
 def file_publish(source, destination):

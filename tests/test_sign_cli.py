@@ -48,6 +48,7 @@ GPG_DELETE_ARGS = GPG_SIGN_COMMON_ARGS + [
     "--delete-secret-and-public-key",
     "--yes",
 ]
+GPG_SIGN_KEY_OUTPUT_ARGS = GPG_SIGN_COMMON_ARGS + ["--export", "--armor"]
 
 
 class TestSignCLI(unittest.TestCase):
@@ -139,29 +140,6 @@ class TestSignCLI(unittest.TestCase):
         )
         self.assertTrue(exists(f"{test_sign_file}.{SignatureTypes.GPG}"))
 
-    def test_sign_remove_original(self):
-        test_sign_file = os.path.join(CURRENT_TEST_DIR, f"{TEST_FILE}-3")
-        self.assertTrue(write(test_sign_file, TEST_CONTENT))
-        self.assertTrue(exists(test_sign_file))
-
-        test_sign_file_output = f"{test_sign_file}.{SignatureTypes.GPG}"
-        self.assertEqual(
-            main(
-                [
-                    test_sign_file,
-                    TEST_KEY_NAME,
-                    "--signature-args",
-                    GPG_SIGN_ARGS,
-                    "--output",
-                    test_sign_file_output,
-                    "--remove-original",
-                ]
-            ),
-            SUCCESS,
-        )
-        self.assertFalse(exists(test_sign_file))
-        self.assertTrue(exists(test_sign_file_output))
-
     def test_sign_detach_signature(self):
         test_sign_file = os.path.join(CURRENT_TEST_DIR, f"{TEST_FILE}-4")
         self.assertTrue(write(test_sign_file, TEST_CONTENT))
@@ -181,3 +159,30 @@ class TestSignCLI(unittest.TestCase):
         )
         self.assertTrue(exists(test_sign_file))
         self.assertTrue(exists(test_sign_file_output))
+
+    def test_sign_key_file_output(self):
+        # Create a temporary file to sign
+        test_sign_file = os.path.join(CURRENT_TEST_DIR, f"{TEST_FILE}-5")
+        self.assertTrue(write(test_sign_file, TEST_CONTENT))
+        self.assertTrue(exists(test_sign_file))
+
+        test_signed_file_output = f"{test_sign_file}.{SignatureTypes.GPG}"
+        test_signed_key_file_output = f"{test_sign_file}.asc"
+        # Sign the temporary file
+        self.assertEqual(
+            main(
+                [
+                    test_sign_file,
+                    TEST_KEY_NAME,
+                    "--signature-args",
+                    GPG_SIGN_ARGS,
+                    "--with-signature-key-output",
+                    "--signature-key-output-args",
+                    GPG_SIGN_KEY_OUTPUT_ARGS,
+                ]
+            ),
+            SUCCESS,
+        )
+        # Verify the signed file and the signature output key file exists
+        self.assertTrue(exists(test_signed_file_output))
+        self.assertTrue(exists(test_signed_key_file_output))

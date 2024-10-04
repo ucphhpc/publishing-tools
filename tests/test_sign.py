@@ -7,8 +7,10 @@ from publish.signature import (
     delete_key,
     get_key_fingerprint,
     SignatureTypes,
+    export_signature_key,
+    write_signature_key_file,
 )
-from publish.utils.io import makedirs, exists, remove, write
+from publish.utils.io import makedirs, exists, remove, write, load
 from tests.common import TMP_TEST_PATH, TEST_FILE, TEST_CONTENT, NON_EXISTING_FILE
 
 TEST_NAME = os.path.basename(__file__).split(".")[0]
@@ -158,3 +160,53 @@ class TestGpGSignFile(unittest.TestCase):
         # Verify the signed file exists
         self.assertTrue(exists(test_file_path))
         self.assertTrue(exists(test_detached_signed_file_ouput))
+
+    def test_export_sign_key_output(self):
+        # Export the signature key
+        signature_key = export_signature_key(
+            TEST_KEY_NAME,
+            sign_command=SignatureTypes.GPG,
+            sign_args=GPG_SIGN_COMMON_ARGS,
+        )
+        self.assertIsNotNone(signature_key)
+        self.assertIsInstance(signature_key, str)
+        self.assertIn("-----BEGIN PGP PUBLIC KEY BLOCK-----", signature_key)
+
+    def test_export_sign_key_write(self):
+        # Write the signature key to a file
+        signature_key_destionation = os.path.join(
+            CURRENT_TEST_DIR, f"{TEST_FILE}-3.asc"
+        )
+        self.assertTrue(
+            write_signature_key_file(
+                TEST_KEY_NAME,
+                signature_key_destionation,
+                sign_command=SignatureTypes.GPG,
+                sign_args=GPG_SIGN_COMMON_ARGS,
+            )
+        )
+        self.assertTrue(exists(signature_key_destionation))
+
+    def test_export_sign_key_compare(self):
+        # Export the signature key
+        signature_key = export_signature_key(
+            TEST_KEY_NAME,
+            sign_command=SignatureTypes.GPG,
+            sign_args=GPG_SIGN_COMMON_ARGS,
+        )
+        # Write the signature key to a file
+        signature_key_destionation = os.path.join(
+            CURRENT_TEST_DIR, f"{TEST_FILE}-4.asc"
+        )
+        self.assertTrue(
+            write_signature_key_file(
+                TEST_KEY_NAME,
+                signature_key_destionation,
+                sign_command=SignatureTypes.GPG,
+                sign_args=GPG_SIGN_COMMON_ARGS,
+            )
+        )
+        self.assertTrue(exists(signature_key_destionation))
+        loaded_signature_key = load(signature_key_destionation)
+        self.assertIsNotNone(loaded_signature_key)
+        self.assertEqual(signature_key, loaded_signature_key)

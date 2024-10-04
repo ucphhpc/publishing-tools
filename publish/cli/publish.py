@@ -2,7 +2,7 @@ import argparse
 import sys
 import os
 from publish.signature import SignatureTypes, SignatureSources
-from publish.publish import PublishTypes, publish, ChecksumTypes
+from publish.publish import PublishTypes, publish, ChecksumTypes, publish_signature_key
 from publish.publish_container import get_image
 from publish.utils.io import exists
 from publish.cli.common import error_print
@@ -11,6 +11,7 @@ from publish.cli.return_codes import (
     FILE_NOT_FOUND,
     IMAGE_NOT_FOUND,
     PUBLISH_FAILURE,
+    SIGN_KEY_FILE_FAILURE,
 )
 
 SCRIPT_NAME = __file__
@@ -96,6 +97,25 @@ def parse_args(args):
         help="Path of the generated signature file. Default is None, which will output to the FILE path with the --signature-generator extension",
     )
     parser.add_argument(
+        "--with-signature-key-output",
+        "-wsko",
+        action="store_true",
+        default=False,
+        help="Flag on whether the --signature-key should be written to a file in the destination directory.",
+    )
+    parser.add_argument(
+        "--signature-key-output-path",
+        "-skop",
+        default=None,
+        help="The path to where the --with-signature-key-output should be written. If None is set, the default is the same path as the 'file' with an `.asc` extension.",
+    )
+    parser.add_argument(
+        "--signature-key-output-args",
+        "-skoa",
+        default="--armor --export",
+        help="Optional arguments to give the selected --signature-generator when generating the key.",
+    )
+    parser.add_argument(
         "--verbose",
         "-v",
         action="store_true",
@@ -118,6 +138,9 @@ def main(args):
     signature_key = parsed_args.signature_key
     signature_args = parsed_args.signature_args
     signature_output = parsed_args.signature_output
+    with_signature_key_output = parsed_args.with_signature_key_output
+    signature_key_output_path = parsed_args.signature_key_output_path
+    signature_key_output_args = parsed_args.signature_key_output_args
     verbose = parsed_args.verbose
 
     if publish_type == PublishTypes.FILE:
@@ -151,6 +174,10 @@ def main(args):
         # The underlying API expects a list of arguments
         signature_args = signature_args.split()
 
+    if isinstance(signature_key_output_args, str):
+        # The underlying API expects a list of arguments
+        signature_key_output_args = signature_key_output_args.split()
+
     if verbose:
         print(f"Publishing source: {source} to destination: {destination}")
 
@@ -172,6 +199,20 @@ def main(args):
             f"Failed to correctly publish source: {source} to destination: {destination}"
         )
         return PUBLISH_FAILURE
+    # TODO, when the checksum file is used as the input
+    # for the signature, the signature_key_output_path should
+    # be based on the checksum file path, not the destination path
+    if with_signature_key_output:
+        if not signature_key_output_path:
+            if signature_source == SignatureSources.GENERATED_CHECKSUM_FILE:
+                signature_key_output_path = f"{destination}.{checksum_algorithm}.asc"
+            else:
+                signature_key_output_path = f"{destination}.asc"
+        if not publish_signature_key(
+            signature_key, signature_key_output_path, verbose=verbose
+        ):
+            error_print(f"Failed to write signature key to file: {signature_key}")
+            return SIGN_KEY_FILE_FAILURE
     if verbose:
         print(f"Successfully published source: {source} to destination: {destination}")
     return SUCCESS

@@ -18,11 +18,12 @@ TEST_KEY_NAME = f"{TEST_NAME}_key"
 
 # GPG settings
 TMP_TEST_GNUPG_DIR = os.path.join(CURRENT_TEST_DIR, ".gnupg")
+WRONG_TMP_TEST_GNUPG_DIR = os.path.join(CURRENT_TEST_DIR, ".gnupg_wrong")
 # Used for wrong gpg keychain tests
 GPP_WRONG_KEYCHAIN = f"wrong-keyring.{SignatureTypes.GPG}"
 GPG_COMMON_WRONG_KEYCHAIN_ARGS = [
     "--homedir",
-    TMP_TEST_GNUPG_DIR,
+    WRONG_TMP_TEST_GNUPG_DIR,
     "--no-default-keyring",
     "--keyring",
     GPP_WRONG_KEYCHAIN,

@@ -209,7 +209,11 @@ def main(args):
             else:
                 signature_key_output_path = f"{destination}.asc"
         if not publish_signature_key(
-            signature_key, signature_key_output_path, verbose=verbose
+            signature_key,
+            signature_key_output_path,
+            sign_command=signature_generator,
+            sign_args=signature_key_output_args,
+            verbose=verbose,
         ):
             error_print(f"Failed to write signature key to file: {signature_key}")
             return SIGN_KEY_FILE_FAILURE

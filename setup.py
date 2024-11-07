@@ -32,7 +32,7 @@ setup(
     author_email="munk1@live.dk",
     packages=find_packages(),
     url="https://github.com/rasmunk/publishing-tools",
-    license="MIT",
+    license="GNU General Public License v2 (GPLv2)",
     keywords=[
         "Publishing",
         "Signature",

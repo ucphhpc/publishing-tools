@@ -45,6 +45,8 @@ pipelines:
     parameters:
       ARGS: ''
       SRC_DIRECTORY: publishing-tools
+      BUILD_ARGS: 'all'
       TEST_DIRECTORY: publishing-tools
+      TEST_MAKE_TARGET: test
       PUSH_DIRECTORY: publish-python-scripts
     template: pypi_package

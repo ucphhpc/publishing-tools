@@ -17,6 +17,7 @@
 environments:
   publishing_tools:
     environment_variables:
+      GIT_TERMINAL_PROMPT: 0
       GIT_USER: "{{SECRET:[github][username]}}"
       PYPI_USERNAME: "{{SECRET:[publishing_tools][username]}}"
       PYPI_PASSWORD: "{{SECRET:[publishing_tools][password]}}"
